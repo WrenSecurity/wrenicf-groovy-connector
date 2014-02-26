@@ -1,7 +1,7 @@
 /*
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 ForgeRock Inc. All rights reserved.
+ * Copyright (c) 2013-2014 ForgeRock AS. All rights reserved.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -74,7 +74,6 @@ import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
  *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  * @version 1.1.0.0
- * @since 1.0
  */
 public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, DeleteOp, ScriptOnConnectorOp, SchemaOp, SearchOp<Map>, SyncOp, TestOp, UpdateAttributeValuesOp {
 
@@ -120,7 +119,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
     /**
      * Callback method to receive the {@link Configuration}.
      *
-     * @param configuration the new {@link Configuration}
+     * @param config the new {@link Configuration}
      *
      */
     @Override

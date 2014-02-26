@@ -2,7 +2,7 @@
 <!--
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright (c) 2011-2013 ForgeRock AS. All rights reserved.
+ Copyright (c) 2011-2014 ForgeRock AS. All rights reserved.
 
  The contents of this file are subject to the terms
  of the Common Development and Distribution License
@@ -32,10 +32,15 @@
     </parent>
     <groupId>org.forgerock.openicf.misc</groupId>
     <artifactId>scriptedcommon</artifactId>
-    <version>1.1.1.0-SNAPSHOT</version>
+    <version>1.1.0.0</version>
     <packaging>bundle</packaging>
     <name>Scripted Common</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted connector, such as ScriptedSQL connector.</description>
+    <scm>
+        <connection>scm:svn:https://svn.forgerock.org/openicf/branches/openicf-scriptedcommon-1.1.0.x</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/branches/openicf-scriptedcommon-1.1.0.x</developerConnection>
+        <url>http://sources.forgerock.org/browse/openicf/branches/openicf-scriptedcommon-1.1.0.x</url>
+    </scm>
     <repositories>
         <repository>
             <id>forgerock-staging-repository</id>
@@ -80,4 +85,42 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>forgerock-release</id>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                    <resource>
+                        <directory>${project.build.directory}/licenseResource</directory>
+                        <filtering>false</filtering>
+                    </resource>
+                </resources>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>2.8</version>
+                        <executions>
+                            <execution>
+                                <id>unpack</id>
+                                <phase>process-sources</phase>
+                                <goals>
+                                    <goal>unpack</goal>
+                                </goals>
+                                <configuration>
+                                    <artifact>org.forgerock.openicf:openicf-license:1.1.0</artifact>
+                                    <includes>**/ForgeRock*.txt</includes>
+                                    <outputDirectory>${project.build.directory}/licenseResource</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
