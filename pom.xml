@@ -37,9 +37,9 @@
     <name>Scripted Common</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted connector, such as ScriptedSQL connector.</description>
     <scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/branches/openicf-scriptedcommon-1.1.0.x</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/branches/openicf-scriptedcommon-1.1.0.x</developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/branches/openicf-scriptedcommon-1.1.0.x</url>
+        <connection>scm:svn:https://svn.forgerock.org/openicf/tags/openicf-scriptedcommon-1.1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/tags/openicf-scriptedcommon-1.1.0.0</developerConnection>
+        <url>http://sources.forgerock.org/browse/openicf/tags/openicf-scriptedcommon-1.1.0.0</url>
     </scm>
     <repositories>
         <repository>
