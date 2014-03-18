@@ -188,14 +188,21 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             try {
                 Object uidAfter = authenticateExecutor.execute(arguments);
                 if (uidAfter instanceof String) {
-                    log.ok("{0} authenticated", uidAfter);
+                    log.ok("{0}:{1} authenticated", objectClass.getObjectClassValue(), uidAfter);
                     return new Uid((String) uidAfter);
+                } else if (uidAfter instanceof Uid) {
+                    log.ok("{0}:{1} authenticated", objectClass.getObjectClassValue(), uidAfter);
+                    return (Uid) uidAfter;
                 } else {
-                    throw new ConnectorException("Authenticate script didn't return with the __UID__ value");
+                    throw new ConnectorException(
+                            "Authenticate script didn't return with the uid(__UID__) value");
                 }
-            } catch (Exception e) {
+            } catch (final RuntimeException e) {
+                throw e;
+            } catch (final Exception e) {
                 throw new ConnectorException("Authenticate script error", e);
             }
+
         } else {
             throw new UnsupportedOperationException();
         }
