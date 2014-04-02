@@ -58,7 +58,7 @@ import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.Connector;
+import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.operations.AuthenticateOp;
 import org.identityconnectors.framework.spi.operations.CreateOp;
 import org.identityconnectors.framework.spi.operations.DeleteOp;
@@ -71,16 +71,18 @@ import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 
 /**
  * Main implementation of the Scripted Common code.
- *
+ * 
  * @author Gael Allioux <gael.allioux@forgerock.com>
  * @version 1.1.0.0
  */
-public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, DeleteOp, ScriptOnConnectorOp, SchemaOp, SearchOp<Map>, SyncOp, TestOp, UpdateAttributeValuesOp {
+public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConnector, DeleteOp,
+        ScriptOnConnectorOp, SchemaOp, SearchOp<Map>, SyncOp, TestOp, UpdateAttributeValuesOp {
 
     /**
      * Setup logging for the {@link ScriptedConnector}.
      */
     private static final Log log = Log.getLog(ScriptedConnector.class);
+    protected static final String LINE_SEPARATOR = System.getProperty("line.separator");
     /**
      * Place holder for the Connection created in the init method.
      */
@@ -91,7 +93,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
     private Schema schema;
     /**
      * Place holder for the {@link Configuration} passed into the init() method
-     * {@link ScriptedConnector#init(org.identityconnectors.framework.spi.Configuration)}.
+     * {@link ScriptedConnector#init(org.identityconnectors.framework.spi.Configuration)}
+     * .
      */
     protected ScriptedConfiguration configuration;
     /**
@@ -109,7 +112,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
 
     /**
      * Gets the Configuration context for this connector.
-     *
+     * 
      * @return The current {@link Configuration}
      */
     public Configuration getConfiguration() {
@@ -118,24 +121,33 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
 
     /**
      * Callback method to receive the {@link Configuration}.
-     *
-     * @param config the new {@link Configuration}
-     *
+     * 
+     * @param config
+     *            the new {@link Configuration}
+     * 
      */
     @Override
     public void init(final Configuration config) {
         this.configuration = (ScriptedConfiguration) config;
-        this.factory = ScriptExecutorFactory.newInstance("GROOVY");
+        this.factory = ScriptExecutorFactory.newInstance(this.configuration.getScriptingLanguage());
+    }
+
+    @Override
+    public void checkAlive() {
+        if (null == configuration || null == factory) {
+            throw new IllegalStateException();
+        }
     }
 
     /**
      * Disposes of the {@link ScriptedConnector}'s resources.
-     *
+     * 
      * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
     @Override
     public void dispose() {
         configuration = null;
+        factory = null;
         if (connection != null) {
             connection.dispose();
             connection = null;
@@ -144,14 +156,15 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
 
     /**
      * SPI Operations
-     *
+     * 
      * Implement the following operations using the contract and description
      * found in the Javadoc for these methods.
      */
     /**
      * {@inheritDoc}
      */
-    public Uid authenticate(ObjectClass objectClass, String username, GuardedString password, OperationOptions options) {
+    public Uid authenticate(ObjectClass objectClass, String username, GuardedString password,
+            OperationOptions options) {
         if (authenticateExecutor == null || configuration.isReloadScriptOnExecution()) {
             authenticateExecutor = getScriptExecutor(configuration.getAuthenticateScriptFileName());
             log.ok("Authenticate script loaded");
@@ -185,22 +198,24 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
                 arguments.put("password", password);
             }
 
+            Object uidAfter = null;
             try {
-                Object uidAfter = authenticateExecutor.execute(arguments);
-                if (uidAfter instanceof String) {
-                    log.ok("{0}:{1} authenticated", objectClass.getObjectClassValue(), uidAfter);
-                    return new Uid((String) uidAfter);
-                } else if (uidAfter instanceof Uid) {
-                    log.ok("{0}:{1} authenticated", objectClass.getObjectClassValue(), uidAfter);
-                    return (Uid) uidAfter;
-                } else {
-                    throw new ConnectorException(
-                            "Authenticate script didn't return with the uid(__UID__) value");
-                }
+                uidAfter = authenticateExecutor.execute(arguments);
             } catch (final RuntimeException e) {
                 throw e;
             } catch (final Exception e) {
                 throw new ConnectorException("Authenticate script error", e);
+            }
+            if (uidAfter instanceof String) {
+                log.ok("{0}:{1} authenticated", objectClass.getObjectClassValue(), uidAfter);
+                return new Uid((String) uidAfter);
+            } else if (uidAfter instanceof Uid) {
+                log.ok("{0}:{1} authenticated", objectClass.getObjectClassValue(), ((Uid) uidAfter)
+                        .getUidValue());
+                return (Uid) uidAfter;
+            } else {
+                throw new ConnectorException(
+                        "Authenticate script didn't return with the uid(__UID__) value");
             }
 
         } else {
@@ -209,7 +224,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
 
     }
 
-    public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes, final OperationOptions options) {
+    public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
+            final OperationOptions options) {
         if (createExecutor == null || configuration.isReloadScriptOnExecution()) {
             createExecutor = getScriptExecutor(configuration.getCreateScriptFileName());
             log.ok("Create script loaded");
@@ -230,10 +246,12 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             arguments.put("log", log);
             arguments.put("objectClass", objectClass.getObjectClassValue());
             arguments.put("options", options.getOptions());
-            // We give the id (name) as an argument, more friendly than dealing with __NAME__
+            // We give the id (name) as an argument, more friendly than dealing
+            // with __NAME__
             arguments.put("id", null);
             if (AttributeUtil.getNameFromAttributes(createAttributes) != null) {
-                arguments.put("id", AttributeUtil.getNameFromAttributes(createAttributes).getNameValue());
+                arguments.put("id", AttributeUtil.getNameFromAttributes(createAttributes)
+                        .getNameValue());
                 attrMap.remove("__NAME__");
             }
             // Password - if allowed we provide it in clear
@@ -251,17 +269,25 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
                 }
             }
 
+            Object uidAfter = null;
             try {
-                Object uidAfter = createExecutor.execute(arguments);
-                if (uidAfter instanceof String) {
-                    log.ok("{0} created", uidAfter);
-                    return new Uid((String) uidAfter);
-                } else {
-                    throw new ConnectorException("Create script didn't return with the __UID__ value");
-                }
+                uidAfter = createExecutor.execute(arguments);
+            } catch (final RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new ConnectorException("Create script error", e);
             }
+            if (uidAfter instanceof String) {
+                log.ok("{0}:{1} created", objectClass.getObjectClassValue(), uidAfter);
+                return new Uid((String) uidAfter);
+            } else if (uidAfter instanceof Uid) {
+                log.ok("{0}:{1} created", objectClass.getObjectClassValue(), ((Uid) uidAfter)
+                        .getUidValue());
+                return (Uid) uidAfter;
+            } else {
+                throw new ConnectorException("Create script didn't return with the __UID__ value");
+            }
+
         } else {
             throw new UnsupportedOperationException();
         }
@@ -293,6 +319,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             try {
                 deleteExecutor.execute(arguments);
                 log.ok("{0} deleted", id);
+            } catch (final RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new ConnectorException("Delete script error", e);
             }
@@ -305,34 +333,41 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      * {@inheritDoc}
      */
     public Schema schema() {
-        SchemaBuilder scmb = new SchemaBuilder(ScriptedConnector.class);
-        if (schemaExecutor == null || configuration.isReloadScriptOnExecution()) {
-            schemaExecutor = getScriptExecutor(configuration.getSchemaScriptFileName());
-            log.ok("Schema script loaded");
-        }
-        if (schemaExecutor != null) {
-            final Map<String, Object> arguments = new HashMap<String, Object>();
-            arguments.put("connection", connection.getConnectionHandler());
-            arguments.put("configuration", configuration);
-            arguments.put("action", "SCHEMA");
-            arguments.put("log", log);
-            arguments.put("builder", scmb);
-            try {
-                schemaExecutor.execute(arguments);
-            } catch (Exception e) {
-                throw new ConnectorException("Schema script error", e);
+        if (null == schema || configuration.isReloadScriptOnExecution()) {
+            if (schemaExecutor == null || configuration.isReloadScriptOnExecution()) {
+                schemaExecutor = getScriptExecutor(configuration.getSchemaScriptFileName());
+                log.ok("Schema script loaded");
             }
-        } else {
-            throw new UnsupportedOperationException("SCHEMA script executor is null. Problem loading Schema script");
+
+            if (schemaExecutor != null) {
+                SchemaBuilder scmb = new SchemaBuilder(ScriptedConnector.class);
+                final Map<String, Object> arguments = new HashMap<String, Object>();
+                arguments.put("connection", connection.getConnectionHandler());
+                arguments.put("configuration", configuration);
+                arguments.put("action", "SCHEMA");
+                arguments.put("log", log);
+                arguments.put("builder", scmb);
+                try {
+                    schemaExecutor.execute(arguments);
+                } catch (final RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new ConnectorException("Schema script error", e);
+                }
+                schema = scmb.build();
+            } else {
+                throw new UnsupportedOperationException(
+                        "SCHEMA script executor is null. Problem loading Schema script");
+            }
         }
-        schema = scmb.build();
         return schema;
     }
 
     /**
      * {@inheritDoc}
      */
-    public FilterTranslator<Map> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
+    public FilterTranslator<Map> createFilterTranslator(ObjectClass objectClass,
+            OperationOptions options) {
         log.ok("ObjectClass: {0}", objectClass.getObjectClassValue());
         return new ScriptedFilterTranslator();
     }
@@ -340,7 +375,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
     /**
      * {@inheritDoc}
      */
-    public void executeQuery(ObjectClass objectClass, Map query, ResultsHandler handler, OperationOptions options) {
+    public void executeQuery(ObjectClass objectClass, Map query, ResultsHandler handler,
+            OperationOptions options) {
         if (searchExecutor == null || configuration.isReloadScriptOnExecution()) {
             searchExecutor = getScriptExecutor(configuration.getSearchScriptFileName());
             log.ok("Search script loaded");
@@ -358,9 +394,12 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             arguments.put("options", options.getOptions());
             arguments.put("query", query);
             try {
-                List<Map<String, Object>> results = (List<Map<String, Object>>) searchExecutor.execute(arguments);
+                List<Map<String, Object>> results =
+                        (List<Map<String, Object>>) searchExecutor.execute(arguments);
                 log.ok("Search ok");
                 processResults(objectClass, results, handler);
+            } catch (final RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new ConnectorException("Search script error", e);
             }
@@ -372,7 +411,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
     /**
      * {@inheritDoc}
      */
-    public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler, final OperationOptions options) {
+    public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler,
+            final OperationOptions options) {
         if (syncExecutor == null || configuration.isReloadScriptOnExecution()) {
             syncExecutor = getScriptExecutor(configuration.getSyncScriptFileName());
             log.ok("Sync script loaded");
@@ -390,9 +430,12 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             arguments.put("options", options.getOptions());
             arguments.put("token", token != null ? token.getValue() : null);
             try {
-                List<Map<String, Object>> results = (List<Map<String, Object>>) syncExecutor.execute(arguments);
+                List<Map<String, Object>> results =
+                        (List<Map<String, Object>>) syncExecutor.execute(arguments);
                 log.ok("Sync ok");
                 processDeltas(objectClass, results, handler);
+            } catch (final RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new ConnectorException("Sync script error", e);
             }
@@ -421,7 +464,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             arguments.put("action", "GET_LATEST_SYNC_TOKEN");
             arguments.put("log", log);
             try {
-                // We expect the script to return a value (or null) that makes the sync token
+                // We expect the script to return a value (or null) that makes
+                // the sync token
                 // !! result has to be one of the framework known types...
                 Object result = syncExecutor.execute(arguments);
                 log.ok("GetLatestSyncToken ok");
@@ -429,6 +473,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
                 st = new SyncToken(result);
             } catch (java.lang.IllegalArgumentException ae) {
                 throw new ConnectorException("Unknown Token type", ae);
+            } catch (final RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new ConnectorException("Sync (GetLatestSyncToken) script error", e);
             }
@@ -443,7 +489,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      */
     @Override
     public void test() {
-        log.info("Evaluate and compile every scripts") ;
+        log.info("Evaluate and compile every scripts");
         authenticateExecutor = getScriptExecutor(configuration.getAuthenticateScriptFileName());
         createExecutor = getScriptExecutor(configuration.getCreateScriptFileName());
         updateExecutor = getScriptExecutor(configuration.getUpdateScriptFileName());
@@ -463,6 +509,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             try {
                 testExecutor.execute(arguments);
                 log.ok("Test ok");
+            } catch (final RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new ConnectorException("Test script error", e);
             }
@@ -474,7 +522,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      */
     @Override
     public Object runScriptOnConnector(ScriptContext request, OperationOptions options) {
-        if ("GROOVY".equalsIgnoreCase(request.getScriptLanguage()) && request.getScriptText() != null) {
+        if ("GROOVY".equalsIgnoreCase(request.getScriptLanguage())
+                && request.getScriptText() != null) {
             final Map<String, Object> arguments = new HashMap<String, Object>();
             arguments.put("connection", connection.getConnectionHandler());
             arguments.put("configuration", configuration);
@@ -483,11 +532,15 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             arguments.put("options", options.getOptions());
             arguments.put("scriptArguments", request.getScriptArguments());
 
-            ScriptExecutor se = factory.newScriptExecutor(getClass().getClassLoader(), request.getScriptText(), true);
+            ScriptExecutor se =
+                    factory.newScriptExecutor(getClass().getClassLoader(), request.getScriptText(),
+                            true);
             try {
                 Object res = se.execute(arguments);
                 log.ok("runScriptOnConnector ok");
                 return res;
+            } catch (final RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new ConnectorException("runScriptOnConnector script error", e);
             }
@@ -500,7 +553,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      * {@inheritDoc}
      */
     @Override
-    public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes, OperationOptions options) {
+    public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes,
+            OperationOptions options) {
         return genericUpdate("UPDATE", objectClass, uid, replaceAttributes, options);
     }
 
@@ -508,7 +562,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      * {@inheritDoc}
      */
     @Override
-    public Uid addAttributeValues(ObjectClass objectClass, Uid uid, Set<Attribute> valuesToAdd, OperationOptions options) {
+    public Uid addAttributeValues(ObjectClass objectClass, Uid uid, Set<Attribute> valuesToAdd,
+            OperationOptions options) {
         return genericUpdate("ADD_ATTRIBUTE_VALUES", objectClass, uid, valuesToAdd, options);
     }
 
@@ -516,12 +571,14 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
      * {@inheritDoc}
      */
     @Override
-    public Uid removeAttributeValues(ObjectClass objectClass, Uid uid, Set<Attribute> valuesToRemove, OperationOptions options) {
+    public Uid removeAttributeValues(ObjectClass objectClass, Uid uid,
+            Set<Attribute> valuesToRemove, OperationOptions options) {
         return genericUpdate("REMOVE_ATTRIBUTE_VALUES", objectClass, uid, valuesToRemove, options);
     }
 
     // Private
-    private Uid genericUpdate(String method, ObjectClass objClass, Uid uid, Set<Attribute> attrs, OperationOptions options) {
+    private Uid genericUpdate(String method, ObjectClass objClass, Uid uid, Set<Attribute> attrs,
+            OperationOptions options) {
         if (updateExecutor == null || configuration.isReloadScriptOnExecution()) {
             updateExecutor = getScriptExecutor(configuration.getUpdateScriptFileName());
             log.ok("Update ({0}) script loaded", method);
@@ -565,14 +622,20 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
                     arguments.put("password", null);
                 }
             }
+            Object uidAfter = null;
             try {
-                Object uidAfter = updateExecutor.execute(arguments);
-                if (uidAfter instanceof String) {
-                    log.ok("{0} updated ({1})", uidAfter, method);
-                    return new Uid((String) uidAfter);
-                }
+                uidAfter = updateExecutor.execute(arguments);
+            } catch (final RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new ConnectorException("Update(" + method + ") script error", e);
+            }
+            if (uidAfter instanceof String) {
+                log.ok("{0} updated ({1})", uidAfter, method);
+                return new Uid((String) uidAfter);
+            } else if (uidAfter instanceof Uid) {
+                log.ok("{0} updated ({1})", ((Uid) uidAfter).getUidValue(), method);
+                return (Uid) uidAfter;
             }
             throw new ConnectorException("Update script didn't return with the __UID__ value");
         } else {
@@ -580,7 +643,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
         }
     }
 
-    private void processResults(ObjectClass objClass, List<Map<String, Object>> results, ResultsHandler handler) {
+    private void processResults(ObjectClass objClass, List<Map<String, Object>> results,
+            ResultsHandler handler) {
 
         // Let's iterate over the results:
         for (Map<String, Object> result : results) {
@@ -617,13 +681,15 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
         }
     }
 
-    private void processDeltas(ObjectClass objClass, List<Map<String, Object>> results, SyncResultsHandler handler) {
+    private void processDeltas(ObjectClass objClass, List<Map<String, Object>> results,
+            SyncResultsHandler handler) {
 
         // Let's iterate over the results:
         for (Map<String, Object> result : results) {
             // The Map should look like:
             // token: <Object> token
-            // operation: <String> CREATE_OR_UPDATE|DELETE (defaults to CREATE_OR_UPDATE)
+            // operation: <String> CREATE_OR_UPDATE|DELETE (defaults to
+            // CREATE_OR_UPDATE)
             // uid: <String> uid
             // previousUid: <String> prevuid (This is for rename ops)
             // password: <String> password
@@ -647,7 +713,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
                 cobld.setObjectClass(objClass);
 
                 // operation
-                // We assume that if DELETE, then we don't need to care about the rest
+                // We assume that if DELETE, then we don't need to care about
+                // the rest
                 String op = (String) result.get("operation");
                 if (op != null && op.equalsIgnoreCase("DELETE")) {
                     syncbld.setDeltaType(SyncDeltaType.DELETE);
@@ -662,17 +729,21 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
                         syncbld.setPreviousUid(new Uid(prevUid));
                     }
 
-                    // password? is password valid if empty string? let's assume yes...
+                    // password? is password valid if empty string? let's assume
+                    // yes...
                     if (result.get("password") != null) {
-                        cobld.addAttribute(AttributeBuilder.buildCurrentPassword(((String) result.get("password")).toCharArray()));
+                        cobld.addAttribute(AttributeBuilder.buildCurrentPassword(((String) result
+                                .get("password")).toCharArray()));
                     }
 
                     // Remaining attributes
-                    for (Map.Entry<String, List> attr : ((Map<String, List>) result.get("attributes")).entrySet()) {
+                    for (Map.Entry<String, List> attr : ((Map<String, List>) result
+                            .get("attributes")).entrySet()) {
                         final String attrName = attr.getKey();
                         final Object attrValue = attr.getValue();
                         if (attrValue instanceof Collection) {
-                            cobld.addAttribute(AttributeBuilder.build(attrName, (Collection) attrValue));
+                            cobld.addAttribute(AttributeBuilder.build(attrName,
+                                    (Collection) attrValue));
                         } else if (attrValue != null) {
                             cobld.addAttribute(AttributeBuilder.build(attrName, attrValue));
                         } else {
@@ -700,8 +771,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
         try {
             reader = new BufferedReader(new FileReader(file));
             while ((text = reader.readLine()) != null) {
-                contents.append(text).append(System.getProperty(
-                        "line.separator"));
+                contents.append(text).append(LINE_SEPARATOR);
             }
         } catch (FileNotFoundException e) {
             throw new ConnectorException(filename + " not found", e);
@@ -727,7 +797,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, Connector, D
             if (scriptFileName != null) {
                 scriptCode = readFile(scriptFileName);
                 if (scriptCode.length() > 0) {
-                    scriptExec = factory.newScriptExecutor(getClass().getClassLoader(), scriptCode, true);
+                    scriptExec =
+                            factory.newScriptExecutor(getClass().getClassLoader(), scriptCode, true);
                 }
             }
         } catch (Exception e) {
