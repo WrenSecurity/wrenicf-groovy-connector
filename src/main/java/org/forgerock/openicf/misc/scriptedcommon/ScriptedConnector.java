@@ -33,6 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.script.ScriptExecutor;
 import org.identityconnectors.common.script.ScriptExecutorFactory;
@@ -71,7 +73,7 @@ import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
 
 /**
  * Main implementation of the Scripted Common code.
- * 
+ *
  * @author Gael Allioux <gael.allioux@forgerock.com>
  * @version 1.1.0.0
  */
@@ -112,7 +114,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
 
     /**
      * Gets the Configuration context for this connector.
-     * 
+     *
      * @return The current {@link Configuration}
      */
     public Configuration getConfiguration() {
@@ -121,10 +123,10 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
 
     /**
      * Callback method to receive the {@link Configuration}.
-     * 
+     *
      * @param config
      *            the new {@link Configuration}
-     * 
+     *
      */
     @Override
     public void init(final Configuration config) {
@@ -141,7 +143,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
 
     /**
      * Disposes of the {@link ScriptedConnector}'s resources.
-     * 
+     *
      * @see org.identityconnectors.framework.spi.Connector#dispose()
      */
     @Override
@@ -156,7 +158,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
 
     /**
      * SPI Operations
-     * 
+     *
      * Implement the following operations using the contract and description
      * found in the Javadoc for these methods.
      */
@@ -174,7 +176,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
 
             final Map<String, Object> arguments = new HashMap<String, Object>();
 
-            arguments.put("connection", connection.getConnectionHandler());
+            arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                    : null);
             arguments.put("configuration", configuration);
             arguments.put("action", "AUTHENTICATE");
             arguments.put("log", log);
@@ -240,7 +243,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
                 attrMap.put(attr.getName(), attr.getValue());
             }
             arguments.put("attributes", attrMap);
-            arguments.put("connection", connection.getConnectionHandler());
+            arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                    : null);
             arguments.put("configuration", configuration);
             arguments.put("action", "CREATE");
             arguments.put("log", log);
@@ -308,7 +312,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
             final String id = uid.getUidValue();
             final Map<String, Object> arguments = new HashMap<String, Object>();
 
-            arguments.put("connection", connection.getConnectionHandler());
+            arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                    : null);
             arguments.put("configuration", configuration);
             arguments.put("action", "DELETE");
             arguments.put("log", log);
@@ -342,7 +347,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
             if (schemaExecutor != null) {
                 SchemaBuilder scmb = new SchemaBuilder(ScriptedConnector.class);
                 final Map<String, Object> arguments = new HashMap<String, Object>();
-                arguments.put("connection", connection.getConnectionHandler());
+                arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                        : null);
                 arguments.put("configuration", configuration);
                 arguments.put("action", "SCHEMA");
                 arguments.put("log", log);
@@ -386,7 +392,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
             log.ok("ObjectClass: {0}", objectClass.getObjectClassValue());
 
             final Map<String, Object> arguments = new HashMap<String, Object>();
-            arguments.put("connection", connection.getConnectionHandler());
+            arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                    : null);
             arguments.put("configuration", configuration);
             arguments.put("objectClass", objectClass.getObjectClassValue());
             arguments.put("action", "SEARCH");
@@ -422,7 +429,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
             log.ok("ObjectClass: {0}", objectClass.getObjectClassValue());
 
             final Map<String, Object> arguments = new HashMap<String, Object>();
-            arguments.put("connection", connection.getConnectionHandler());
+            arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                    : null);
             arguments.put("configuration", configuration);
             arguments.put("objectClass", objectClass.getObjectClassValue());
             arguments.put("action", "SYNC");
@@ -430,10 +438,11 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
             arguments.put("options", options.getOptions());
             arguments.put("token", token != null ? token.getValue() : null);
             try {
-                List<Map<String, Object>> results =
-                        (List<Map<String, Object>>) syncExecutor.execute(arguments);
+                Object results = syncExecutor.execute(arguments);
                 log.ok("Sync ok");
-                processDeltas(objectClass, results, handler);
+                if (results instanceof List) {
+                    processDeltas(objectClass, (List<Map<String, Object>>) results, handler);
+                }
             } catch (final RuntimeException e) {
                 throw e;
             } catch (Exception e) {
@@ -458,7 +467,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
             log.ok("ObjectClass: {0}", objectClass.getObjectClassValue());
 
             final Map<String, Object> arguments = new HashMap<String, Object>();
-            arguments.put("connection", connection.getConnectionHandler());
+            arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                    : null);
             arguments.put("configuration", configuration);
             arguments.put("objectClass", objectClass.getObjectClassValue());
             arguments.put("action", "GET_LATEST_SYNC_TOKEN");
@@ -490,19 +500,36 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
     @Override
     public void test() {
         log.info("Evaluate and compile every scripts");
-        authenticateExecutor = getScriptExecutor(configuration.getAuthenticateScriptFileName());
-        createExecutor = getScriptExecutor(configuration.getCreateScriptFileName());
-        updateExecutor = getScriptExecutor(configuration.getUpdateScriptFileName());
-        deleteExecutor = getScriptExecutor(configuration.getDeleteScriptFileName());
-        searchExecutor = getScriptExecutor(configuration.getSearchScriptFileName());
-        syncExecutor = getScriptExecutor(configuration.getSyncScriptFileName());
-        schemaExecutor = getScriptExecutor(configuration.getSchemaScriptFileName());
-        testExecutor = getScriptExecutor(configuration.getTestScriptFileName());
+        if (authenticateExecutor == null || configuration.isReloadScriptOnExecution()) {
+            authenticateExecutor = getScriptExecutor(configuration.getAuthenticateScriptFileName());
+        }
+        if (createExecutor == null || configuration.isReloadScriptOnExecution()) {
+            createExecutor = getScriptExecutor(configuration.getCreateScriptFileName());
+        }
+        if (updateExecutor == null || configuration.isReloadScriptOnExecution()) {
+            updateExecutor = getScriptExecutor(configuration.getUpdateScriptFileName());
+        }
+        if (deleteExecutor == null || configuration.isReloadScriptOnExecution()) {
+            deleteExecutor = getScriptExecutor(configuration.getDeleteScriptFileName());
+        }
+        if (searchExecutor == null || configuration.isReloadScriptOnExecution()) {
+            searchExecutor = getScriptExecutor(configuration.getSearchScriptFileName());
+        }
+        if (syncExecutor == null || configuration.isReloadScriptOnExecution()) {
+            syncExecutor = getScriptExecutor(configuration.getSyncScriptFileName());
+        }
+        if (schemaExecutor == null || configuration.isReloadScriptOnExecution()) {
+            schemaExecutor = getScriptExecutor(configuration.getSchemaScriptFileName());
+        }
+        if (testExecutor == null || configuration.isReloadScriptOnExecution()) {
+            testExecutor = getScriptExecutor(configuration.getTestScriptFileName());
+        }
         log.info("Scripts loaded");
 
         if (testExecutor != null) {
             final Map<String, Object> arguments = new HashMap<String, Object>();
-            arguments.put("connection", connection.getConnectionHandler());
+            arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                    : null);
             arguments.put("configuration", configuration);
             arguments.put("action", "TEST");
             arguments.put("log", log);
@@ -525,7 +552,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
         if ("GROOVY".equalsIgnoreCase(request.getScriptLanguage())
                 && request.getScriptText() != null) {
             final Map<String, Object> arguments = new HashMap<String, Object>();
-            arguments.put("connection", connection.getConnectionHandler());
+            arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                    : null);
             arguments.put("configuration", configuration);
             arguments.put("action", "RUNSCRIPTONCONNECTOR");
             arguments.put("log", log);
@@ -589,7 +617,8 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
             final String id = uid.getUidValue();
             final Map<String, Object> arguments = new HashMap<String, Object>();
 
-            arguments.put("connection", connection.getConnectionHandler());
+            arguments.put("connection", null != connection ? connection.getConnectionHandler()
+                    : null);
             arguments.put("configuration", configuration);
             arguments.put("action", method);
             arguments.put("log", log);
@@ -653,12 +682,12 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
                 final String attrName = entry.getKey();
                 final Object attrValue = entry.getValue();
                 // Special first
-                if (attrName.equalsIgnoreCase("__UID__")) {
+                if (attrName.equalsIgnoreCase("__UID__") || attrName.equalsIgnoreCase("uid")) {
                     if (attrValue == null) {
                         throw new IllegalArgumentException("Uid cannot be null");
                     }
                     cobld.setUid(attrValue.toString());
-                } else if (attrName.equalsIgnoreCase("__NAME__")) {
+                } else if (attrName.equalsIgnoreCase("__NAME__") || attrName.equalsIgnoreCase("id")) {
                     if (attrValue == null) {
                         throw new IllegalArgumentException("Name cannot be null");
                     }
@@ -696,8 +725,10 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
             // attributes: <Map> of attributes <String>name/<List>values
             SyncDeltaBuilder syncbld = new SyncDeltaBuilder();
             String uid = (String) result.get("uid");
-            if (uid != null && !uid.isEmpty()) {
+            if (StringUtil.isNotBlank(uid)) {
                 syncbld.setUid(new Uid(uid));
+                String id = result.containsKey("id") ? (String) result.get("id") : uid;
+
                 Object token = result.get("token");
                 // Null token, set some acceptable value
                 if (token == null) {
@@ -708,7 +739,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
 
                 // Start building the connector object
                 ConnectorObjectBuilder cobld = new ConnectorObjectBuilder();
-                cobld.setName(uid);
+                cobld.setName(id);
                 cobld.setUid(uid);
                 cobld.setObjectClass(objClass);
 
@@ -732,7 +763,7 @@ public class ScriptedConnector implements AuthenticateOp, CreateOp, PoolableConn
                     // password? is password valid if empty string? let's assume
                     // yes...
                     if (result.get("password") != null) {
-                        cobld.addAttribute(AttributeBuilder.buildCurrentPassword(((String) result
+                        cobld.addAttribute(AttributeBuilder.buildPassword(((String) result
                                 .get("password")).toCharArray()));
                     }
 

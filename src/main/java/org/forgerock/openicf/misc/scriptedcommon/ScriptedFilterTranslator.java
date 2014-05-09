@@ -25,10 +25,12 @@ package org.forgerock.openicf.misc.scriptedcommon;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.filter.AbstractFilterTranslator;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;
+import org.identityconnectors.framework.common.objects.filter.ContainsAllValuesFilter;
 import org.identityconnectors.framework.common.objects.filter.ContainsFilter;
 import org.identityconnectors.framework.common.objects.filter.EndsWithFilter;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
@@ -80,15 +82,22 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
     }
 
     @Override
-    protected Map<String,Object> createContainsExpression(ContainsFilter filter, boolean not) {
+    protected Map<String, Object> createContainsExpression(ContainsFilter filter, boolean not) {
         return createMap("CONTAINS", filter, not);
+    }
+
+    protected Map createContainsAllValuesExpression(ContainsAllValuesFilter filter, boolean not) {
+        if (null != filter.getAttribute().getValue() && filter.getAttribute().getValue().size() > 1) {
+            throw new UnsupportedOperationException("ContainsAllValuesFilter with multiple values");
+        }
+        return createMap("CONTAINSALL", filter, not);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createEndsWithExpression(EndsWithFilter filter, boolean not) {
+    protected Map<String, Object> createEndsWithExpression(EndsWithFilter filter, boolean not) {
         return createMap("ENDSWITH", filter, not);
     }
 
@@ -96,7 +105,7 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createStartsWithExpression(StartsWithFilter filter, boolean not) {
+    protected Map<String, Object> createStartsWithExpression(StartsWithFilter filter, boolean not) {
         return createMap("STARTSWITH", filter, not);
     }
 
@@ -104,7 +113,7 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createEqualsExpression(EqualsFilter filter, boolean not) {
+    protected Map<String, Object> createEqualsExpression(EqualsFilter filter, boolean not) {
         return createMap("EQUALS", filter, not);
     }
 
@@ -112,8 +121,8 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createAndExpression(Map leftExpression, Map rightExpression) {
-        Map<String,Object> map = new HashMap<String,Object>();
+    protected Map<String, Object> createAndExpression(Map leftExpression, Map rightExpression) {
+        Map<String, Object> map = new HashMap<String, Object>();
         map.put("operation", "AND");
         map.put("left", leftExpression);
         map.put("right", rightExpression);
@@ -124,8 +133,8 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createOrExpression(Map leftExpression, Map rightExpression) {
-        Map<String,Object> map = new HashMap<String,Object>();
+    protected Map<String, Object> createOrExpression(Map leftExpression, Map rightExpression) {
+        Map<String, Object> map = new HashMap<String, Object>();
         map.put("operation", "OR");
         map.put("left", leftExpression);
         map.put("right", rightExpression);
@@ -136,7 +145,7 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createGreaterThanExpression(GreaterThanFilter filter, boolean not) {
+    protected Map<String, Object> createGreaterThanExpression(GreaterThanFilter filter, boolean not) {
         return createMap("GREATERTHAN", filter, not);
     }
 
@@ -144,7 +153,8 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createGreaterThanOrEqualExpression(GreaterThanOrEqualFilter filter, boolean not) {
+    protected Map<String, Object> createGreaterThanOrEqualExpression(
+            GreaterThanOrEqualFilter filter, boolean not) {
         return createMap("GREATERTHANOREQUAL", filter, not);
     }
 
@@ -152,7 +162,7 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createLessThanExpression(LessThanFilter filter, boolean not) {
+    protected Map<String, Object> createLessThanExpression(LessThanFilter filter, boolean not) {
         return createMap("LESSTHAN", filter, not);
     }
 
@@ -160,7 +170,8 @@ public class ScriptedFilterTranslator extends AbstractFilterTranslator<Map> {
      * {@inheritDoc}
      */
     @Override
-    protected Map<String,Object> createLessThanOrEqualExpression(LessThanOrEqualFilter filter, boolean not) {
+    protected Map<String, Object> createLessThanOrEqualExpression(LessThanOrEqualFilter filter,
+            boolean not) {
         return createMap("LESSTHANOREQUAL", filter, not);
     }
 }
