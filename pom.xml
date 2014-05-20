@@ -32,14 +32,14 @@
     </parent>
     <groupId>org.forgerock.openicf.misc</groupId>
     <artifactId>scriptedcommon</artifactId>
-    <version>1.1.0.1-SNAPSHOT</version>
+    <version>1.1.0.1-RC1</version>
     <packaging>bundle</packaging>
     <name>Scripted Common</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted connector, such as ScriptedSQL connector.</description>
     <scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/branches/openicf-scriptedcommon-1.1.0.x</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/branches/openicf-scriptedcommon-1.1.0.x</developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/branches/openicf-scriptedcommon-1.1.0.x</url>
+        <connection>scm:svn:https://svn.forgerock.org/openicf/tags/openicf-scriptedcommon-1.1.0.1</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/tags/openicf-scriptedcommon-1.1.0.1</developerConnection>
+        <url>http://sources.forgerock.org/browse/openicf/tags/openicf-scriptedcommon-1.1.0.1</url>
     </scm>
     <repositories>
         <repository>
