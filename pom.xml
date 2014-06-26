@@ -28,11 +28,11 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <version>1.4.0.0-RC2</version>
+        <version>1.4.0.0</version>
     </parent>
     <groupId>org.forgerock.openicf.connectors</groupId>
     <artifactId>groovy-connector</artifactId>
-    <version>1.4.0.0-RC2</version>
+    <version>1.4.0.0</version>
     <packaging>bundle</packaging>
     <name>Groovy Connector</name>
     <description>This is a generic bundle that contains base classes and interfaces needed to write a scripted
@@ -40,9 +40,9 @@
     </description>
     <url>http://openicf.forgerock.org/connectors/groovy-connector/</url>
     <scm>
-        <connection>scm:svn:https://svn.forgerock.org/openicf/branches/openicf-groovy-connector-1.4.0.x</connection>
-        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/branches/openicf-groovy-connector-1.4.0.x</developerConnection>
-        <url>http://sources.forgerock.org/browse/openicf/branches/openicf-groovy-connector-1.4.0.x</url>
+        <connection>scm:svn:https://svn.forgerock.org/openicf/tags/openicf-groovy-connector-1.4.0.0</connection>
+        <developerConnection>scm:svn:https://svn.forgerock.org/openicf/tags/openicf-groovy-connector-1.4.0.0</developerConnection>
+        <url>http://sources.forgerock.org/browse/openicf/tags/openicf-groovy-connector-1.4.0.0</url>
     </scm>
     <issueManagement>
         <system>jira</system>

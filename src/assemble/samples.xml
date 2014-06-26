@@ -24,7 +24,7 @@
   -->
 
 <!--
-    URL zipUrl = ??.class.getResource("/resources/groovy-connector-1.4.0.0-SNAPSHOT-samples.zip");
+    URL zipUrl = ??.class.getResource("/resources/groovy-connector-1.4.0.0-samples.zip");
     URL entryUrl = new URL("jar:" + zipUrl + "!/groovy/");
 -->
 
