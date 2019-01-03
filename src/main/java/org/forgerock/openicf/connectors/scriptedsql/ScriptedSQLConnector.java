@@ -2,6 +2,7 @@
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2014 ForgeRock AS. All Rights Reserved
+ * Portions Copyright 2018 Wren Security.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -36,7 +37,7 @@ import groovy.lang.Closure;
 /**
  * Main implementation of the ScriptedSQL Connector.
  *
- * @author Gael Allioux <gael.allioux@forgerock.com>
+ * @author Gael Allioux (gael.allioux@forgerock.com)
  */
 @ConnectorClass(displayNameKey = "groovy.sql.connector.display",
         configurationClass = ScriptedSQLConfiguration.class, messageCatalogPaths = {

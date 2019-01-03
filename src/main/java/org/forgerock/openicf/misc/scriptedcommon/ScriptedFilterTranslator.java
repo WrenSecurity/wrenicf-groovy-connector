@@ -2,6 +2,7 @@
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2013-2014 ForgeRock AS. All rights reserved.
+ * Portions Copyright 2018 Wren Security.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -39,7 +40,7 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
 
 /**
- * @author Gael Allioux <gael.allioux@forgerock.com>
+ * @author Gael Allioux (gael.allioux@forgerock.com)
  */
 public class ScriptedFilterTranslator extends AbstractFilterTranslator<Filter> {
 

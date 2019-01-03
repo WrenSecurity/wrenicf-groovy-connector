@@ -2,6 +2,7 @@
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2014 ForgeRock AS. All Rights Reserved
+ * Portions Copyright 2018 Wren Security.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -604,10 +605,10 @@ public abstract class AbstractRemoteConnection implements Connection {
     /**
      * A {@link org.apache.http.client.ResponseHandler} that returns the
      * response body as a JsonValue for successful (2xx) responses. If the
-     * response code was >= 300, the response body is consumed and an
+     * response code was gt;= 300, the response body is consumed and an
      * {@link HttpResponseResourceException} is thrown.
-     * <p/>
-     * If this is used with
+     *
+     * <p>If this is used with
      * {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest, org.apache.http.client.ResponseHandler)}
      * , HttpClient may handle redirects (3xx responses) internally.
      */
@@ -617,7 +618,7 @@ public abstract class AbstractRemoteConnection implements Connection {
         /**
          * Returns the response body as a String if the response was successful
          * (a 2xx status code). If no response body exists, this returns null.
-         * If the response was unsuccessful (>= 300 status code), throws an
+         * If the response was unsuccessful (&gt;= 300 status code), throws an
          * {@link org.apache.http.client.HttpResponseException}.
          */
         @Override
@@ -630,10 +631,10 @@ public abstract class AbstractRemoteConnection implements Connection {
     /**
      * A {@link org.apache.http.client.ResponseHandler} that returns the
      * response body as a String for successful (2xx) responses. If the response
-     * code was >= 300, the response body is consumed and an
+     * code was &gt;= 300, the response body is consumed and an
      * {@link org.apache.http.client.HttpResponseException} is thrown.
-     * <p/>
-     * If this is used with
+     *
+     * <p>If this is used with
      * {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest, org.apache.http.client.ResponseHandler)}
      * , HttpClient may handle redirects (3xx responses) internally.
      */
@@ -649,7 +650,7 @@ public abstract class AbstractRemoteConnection implements Connection {
         /**
          * Returns the response body as a String if the response was successful
          * (a 2xx status code). If no response body exists, this returns null.
-         * If the response was unsuccessful (>= 300 status code), throws an
+         * If the response was unsuccessful (&gt;= 300 status code), throws an
          * {@link org.apache.http.client.HttpResponseException}.
          */
         public QueryResponse buildResult(HttpContext context) throws Exception {
@@ -663,10 +664,10 @@ public abstract class AbstractRemoteConnection implements Connection {
     /**
      * A {@link org.apache.http.client.ResponseHandler} that returns the
      * response body as a Resource for successful (2xx) responses. If the
-     * response code was >= 300, the response body is consumed and an
+     * response code was &gt;= 300, the response body is consumed and an
      * {@link HttpResponseResourceException} is thrown.
-     * <p/>
-     * If this is used with
+     *
+     * <p>If this is used with
      * {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest, org.apache.http.client.ResponseHandler)}
      * , HttpClient may handle redirects (3xx responses) internally.
      */
@@ -676,7 +677,7 @@ public abstract class AbstractRemoteConnection implements Connection {
         /**
          * Returns the response body as a String if the response was successful
          * (a 2xx status code). If no response body exists, this returns null.
-         * If the response was unsuccessful (>= 300 status code), throws an
+         * If the response was unsuccessful (&gt;= 300 status code), throws an
          * {@link org.apache.http.client.HttpResponseException}.
          */
         public ResourceResponse buildResult(HttpContext context) throws Exception {
@@ -690,8 +691,8 @@ public abstract class AbstractRemoteConnection implements Connection {
     /**
      * The HttpResponseResourceException wraps the {@link ResourceException}
      * into {@link org.apache.http.client.HttpResponseException}.
-     * <p/>
-     * This exception is used inside
+     *
+     * <p>This exception is used inside
      * {@link org.apache.http.client.ResponseHandler#handleResponse(org.apache.http.HttpResponse)}.
      */
     public static class HttpResponseResourceException extends HttpResponseException {

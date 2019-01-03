@@ -2,6 +2,7 @@
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2014 ForgeRock AS. All Rights Reserved
+ * Portions Copyright 2018 Wren Security.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -50,7 +51,7 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
  * {@link org.identityconnectors.framework.common.objects.filter.Filter} to
  * {@link Map}.
  *
- * @author Gael Allioux <gael.allioux@forgerock.com>
+ * @author Gael Allioux (gael.allioux@forgerock.com)
  */
 public class MapFilterVisitor implements FilterVisitor<Map<String, Object>, Void> {
 
