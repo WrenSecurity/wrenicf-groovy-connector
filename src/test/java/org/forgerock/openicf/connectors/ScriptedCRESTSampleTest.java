@@ -10,5 +10,5 @@ public class ScriptedCRESTSampleTest extends ScriptedRESTSampleTest {
     protected String getTestName(){
         return CREST_TEST_NAME;
     }
-    
+
 }

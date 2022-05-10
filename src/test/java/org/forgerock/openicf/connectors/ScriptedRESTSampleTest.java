@@ -230,7 +230,7 @@ public class ScriptedRESTSampleTest {
 
         Set<Attribute> createAttributes = createUserAttributes(1, "John", "Doe");
         Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
-        
+
          final List<SyncDelta> deltas = new LinkedList<SyncDelta>();
         facade.sync(ObjectClass.ACCOUNT, new SyncToken(0), new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
@@ -284,11 +284,11 @@ public class ScriptedRESTSampleTest {
     protected String getTestName(){
         return REST_TEST_NAME;
     }
-    
+
     protected ConnectorFacade getFacade() {
         return getFacade(getTestName());
-    } 
-    
+    }
+
     protected ConnectorFacade getFacade(String environment) {
         if (null == facadeInstance) {
             if (CREST_TEST_NAME.equals(environment)) {

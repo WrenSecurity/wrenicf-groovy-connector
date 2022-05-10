@@ -855,7 +855,7 @@ public class ScriptedConnectorTest {
     public void testCustomConfiguration() throws Exception {
         createConnectorFacade(ScriptedConnector.class, "TEST").test();
     }
-    
+
     @Test(expectedExceptions = MissingResourceException.class)
     public void testTest() throws Exception {
         ConnectorFacade facade = getFacade(TEST_NAME);

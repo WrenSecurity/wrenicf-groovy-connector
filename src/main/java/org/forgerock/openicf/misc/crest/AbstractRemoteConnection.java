@@ -494,7 +494,7 @@ public abstract class AbstractRemoteConnection implements Connection {
             }
         } catch (URISyntaxException e) {
             throw new InternalServerErrorException(e);
-        }  
+        }
         rq.setHeader(HttpHeaders.CONNECTION, "close, TE");
         return rq;
     }

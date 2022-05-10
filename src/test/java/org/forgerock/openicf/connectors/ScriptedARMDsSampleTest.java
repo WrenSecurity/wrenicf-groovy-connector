@@ -165,7 +165,7 @@ public class ScriptedARMDsSampleTest {
         final ConnectorFacade facade = getFacade();
         final ObjectClass user = new ObjectClass("user");
         //@formatter:off
-        /*       
+        /*
         {
             "accountEnabled": true,
             "displayName": "Alex Wu",

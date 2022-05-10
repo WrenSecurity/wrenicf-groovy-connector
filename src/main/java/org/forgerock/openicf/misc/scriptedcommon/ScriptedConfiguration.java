@@ -435,14 +435,14 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         config.setClasspathList(Arrays.asList(classpath));
     }
 
-    
+
     private String[] scriptRoots = null;
-    
+
     /**
      * @return the script roots
      */
     @ConfigurationProperty(groupMessageKey = "groovy.engine", required = true)
-    public String[] getScriptRoots() {        
+    public String[] getScriptRoots() {
         return scriptRoots;
     }
 
@@ -621,7 +621,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
             }
         }
     }
-    
+
     // =======================================================================
     // Methods for Script writers
     // =======================================================================
@@ -678,7 +678,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         logger.info("Load and compile configured scripts");
         if (getScriptRoots() == null || getScriptRoots().length < 1) {
             throw new ConfigurationException("Missing required 'scriptRoots' configuration property");
-        }     
+        }
         validateScript(getAuthenticateScriptFileName());
         validateScript(getCreateScriptFileName());
         validateScript(getDeleteScriptFileName());
@@ -869,7 +869,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         } else {
             throw new ConfigurationException("Missing required 'scriptRoots' configuration property");
         }
-        
+
         if (safeRoots.isEmpty()) {
             throw new ConfigurationException("The 'scriptRoots' does not contain valid root");
         }

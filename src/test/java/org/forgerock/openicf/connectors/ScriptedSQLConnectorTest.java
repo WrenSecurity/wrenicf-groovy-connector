@@ -217,7 +217,7 @@ public class ScriptedSQLConnectorTest {
         builder.addScriptArgument("isOK", true);
         facade.runScriptOnConnector(builder.build(), new OperationOptionsBuilder().build());
     }
-    
+
     private Set<Attribute> createUserAttributes(int index, String firstName, String lastName) {
         Set<Attribute> createAttributes = new HashSet<Attribute>();
         createAttributes.add(new Name(lastName.toLowerCase()));
