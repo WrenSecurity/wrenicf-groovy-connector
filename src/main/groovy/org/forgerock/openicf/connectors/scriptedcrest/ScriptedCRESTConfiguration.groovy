@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.connectors.scriptedcrest
@@ -107,7 +108,7 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
     // ===============================================
     // HTTP connection
     // ===============================================
-    
+
     URI serviceAddress = null;
 
     URI proxyAddress = null;
@@ -219,7 +220,7 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
         return httpClient;
     }
 
-    protected Script createCustomizerScript(Class customizerClass, Binding binding) {
+    protected Script createCustomizerScript(Class<?> customizerClass, Binding binding) {
 
         customizerClass.metaClass.customize << { Closure cl ->
             init = null

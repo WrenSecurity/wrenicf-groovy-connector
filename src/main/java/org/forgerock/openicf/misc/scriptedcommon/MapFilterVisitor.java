@@ -2,7 +2,7 @@
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2014 ForgeRock AS. All Rights Reserved
- * Portions Copyright 2018 Wren Security.
+ * Portions Copyright 2018-2022 Wren Security.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -28,7 +28,6 @@ package org.forgerock.openicf.misc.scriptedcommon;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.filter.AndFilter;
 import org.identityconnectors.framework.common.objects.filter.AttributeFilter;

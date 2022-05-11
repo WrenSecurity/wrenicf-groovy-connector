@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.connectors.scriptedrest
@@ -180,11 +181,11 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
 
     private CloseableHttpClient httpClient = null;
 
-    Closure initClosure = null;
-    Closure releaseClosure = null;
-    Closure decorateClosure = null;
+    Closure<?> initClosure = null;
+    Closure<?> releaseClosure = null;
+    Closure<?> decorateClosure = null;
 
-    protected Script createCustomizerScript(Class customizerClass, Binding binding) {
+    protected Script createCustomizerScript(Class<?> customizerClass, Binding binding) {
 
         customizerClass.metaClass.customize << { Closure cl ->
             initClosure = null

@@ -43,7 +43,6 @@ import java.util.Set;
 
 import org.forgerock.openicf.connectors.groovy.ScriptedConnector;
 import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorFacade;
@@ -94,11 +93,6 @@ import org.testng.annotations.Test;
 import groovy.json.JsonSlurper;
 
 public class ScriptedConnectorTest {
-
-    /**
-     * Setup logging for the {@link ScriptedConnectorTest}.
-     */
-    private static final Log logger = Log.getLog(ScriptedConnectorTest.class);
 
     protected static final String TEST_NAME = "GROOVY";
     private static final ObjectClass TEST = new ObjectClass("__TEST__");
@@ -391,7 +385,7 @@ public class ScriptedConnectorTest {
         builder.setScriptText("return arg");
         builder.addScriptArgument("arg01", true);
         builder.addScriptArgument("arg02", "String");
-        assertThat((Map) facade.runScriptOnResource(builder.build(), null)).contains(
+        assertThat((Map<?, ?>) facade.runScriptOnResource(builder.build(), null)).contains(
                 entry("arg01", true), entry("arg02", "String"));
 
     }
@@ -571,14 +565,14 @@ public class ScriptedConnectorTest {
                 or(right, greaterThanOrEqualTo(AttributeBuilder.build("attributeDouble",
                         Double.MIN_VALUE)));
         right = or(right, greaterThan(AttributeBuilder.build("attributeLong", Long.MIN_VALUE)));
-        right = and(right, not(equalTo(AttributeBuilder.build("attributeByte", new Byte("33")))));
+        right = and(right, not(equalTo(AttributeBuilder.build("attributeByte", Byte.parseByte("33")))));
 
         ToListResultsHandler handler = new ToListResultsHandler();
         SearchResult result = getFacade(TEST_NAME).search(TEST, and(left, right), handler, null);
         Assert.assertEquals(handler.getObjects().size(), 10);
         Assert.assertNotNull(result.getPagedResultsCookie());
 
-        Map queryMap = (Map) new JsonSlurper().parseText(result.getPagedResultsCookie());
+        Map<?, ?> queryMap = (Map<?, ?>) new JsonSlurper().parseText(result.getPagedResultsCookie());
         assertThat(queryMap).contains(entry("operation", "AND"));
 
         left =

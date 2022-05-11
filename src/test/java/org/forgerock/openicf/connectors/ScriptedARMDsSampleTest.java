@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.connectors;
@@ -31,16 +32,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.fest.assertions.core.Condition;
-import org.forgerock.openicf.connectors.groovy.ScriptedConnector;
-import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConnector;
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConnector;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
 import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
-import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
@@ -48,7 +45,6 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
@@ -121,12 +117,11 @@ public class ScriptedARMDsSampleTest {
     public void testQueryAll() throws Exception {
         ConnectorFacade facade = getFacade();
         ToListResultsHandler handler = new ToListResultsHandler();
-        SearchResult result = facade.search(new ObjectClass("endpoint"), null, handler, null);
+        facade.search(new ObjectClass("endpoint"), null, handler, null);
         Assert.assertFalse(handler.getObjects().isEmpty());
         handler = new ToListResultsHandler();
-        result =
-                facade.search(new ObjectClass("endpoint"), FilterBuilder.equalTo(AttributeBuilder
-                        .build("status", false)), handler, null);
+        facade.search(new ObjectClass("endpoint"), FilterBuilder.equalTo(AttributeBuilder
+                .build("status", false)), handler, null);
         Assert.assertFalse(handler.getObjects().isEmpty());
         Assert.assertNotNull(facade.getObject(new ObjectClass("endpoint"), new Uid("switch-node-001"), null));
     }
@@ -135,13 +130,8 @@ public class ScriptedARMDsSampleTest {
     public void testQueryGroupsAll() throws Exception {
         ConnectorFacade facade = getFacade();
         ToListResultsHandler handler = new ToListResultsHandler();
-        SearchResult result = facade.search( ObjectClass.GROUP, null, handler, null);
+        facade.search( ObjectClass.GROUP, null, handler, null);
         Assert.assertFalse(handler.getObjects().isEmpty());
-//        handler = new ToListResultsHandler();
-//        result =
-//                facade.search(new ObjectClass("user"), FilterBuilder.equalTo(AttributeBuilder
-//                        .build("accountEnabled", true)), handler, null);
-//        Assert.assertFalse(handler.getObjects().isEmpty());
         Assert.assertNotNull(facade.getObject(ObjectClass.GROUP, new Uid("group-001"), null));
     }
 

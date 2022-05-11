@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.misc.scriptedcommon
@@ -46,11 +47,11 @@ abstract class AbstractICFBuilder<B> {
     B getBuilder(){
         return builder;
     }
-    
+
     protected void complete() {}
 
-    protected void delegateToTag(Class<? extends AbstractICFBuilder> clazz, Closure body) {
-        AbstractICFBuilder tag = (AbstractICFBuilder) clazz.newInstance(builder)
+    protected void delegateToTag(Class<? extends AbstractICFBuilder<?>> clazz, Closure<?> body) {
+        AbstractICFBuilder<?> tag = (AbstractICFBuilder) clazz.newInstance(builder)
         def clone = body.rehydrate(tag, this, this)
         clone()
         tag.complete()
