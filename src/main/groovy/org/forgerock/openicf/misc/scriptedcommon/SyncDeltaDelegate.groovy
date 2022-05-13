@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.misc.scriptedcommon
@@ -48,7 +49,7 @@ class SyncDeltaDelegate extends AbstractICFBuilder<SyncDeltaBuilder> {
     void syncToken(Object token) {
         ((SyncDeltaBuilder) builder).setToken(new SyncToken(token));
     }
-    
+
     void setDeltaType(SyncDeltaType deltaType){
         ((SyncDeltaBuilder) builder).setDeltaType(deltaType)
     }
@@ -87,7 +88,7 @@ class SyncDeltaDelegate extends AbstractICFBuilder<SyncDeltaBuilder> {
         ((SyncDeltaBuilder) builder).setPreviousUid(uid);
     }
 
-    void object(@DelegatesTo(ConnectorObjectDelegate) Closure closure) {
+    void object(@DelegatesTo(ConnectorObjectDelegate) Closure<?> closure) {
         ((SyncDeltaBuilder) builder).setObject(ICFObjectBuilder.co(closure));
     }
 

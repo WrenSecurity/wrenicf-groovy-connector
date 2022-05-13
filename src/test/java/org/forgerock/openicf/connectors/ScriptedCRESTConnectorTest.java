@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.connectors;
@@ -186,7 +187,7 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
                 or(right, greaterThanOrEqualTo(AttributeBuilder.build("attributeDouble",
                         Double.MIN_VALUE)));
         right = or(right, greaterThan(AttributeBuilder.build("attributeLong", Long.MIN_VALUE)));
-        right = and(right, not(equalTo(AttributeBuilder.build("attributeByte", new Byte("33")))));
+        right = and(right, not(equalTo(AttributeBuilder.build("attributeByte", Byte.parseByte("33")))));
         left =
                 and(left, containsAllValues(AttributeBuilder.build("attributeStringMultivalue",
                         "value1", "value2")));
@@ -205,7 +206,7 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
         ScriptContextBuilder builder = new ScriptContextBuilder();
         builder.setScriptLanguage("crest");
         builder.setScriptText("UNKNOWN");
-        Object response =  facade.runScriptOnResource(builder.build(), null);
+        facade.runScriptOnResource(builder.build(), null);
     }
 
     private Set<Attribute> createUserAttributes(String firstName, String lastName) {

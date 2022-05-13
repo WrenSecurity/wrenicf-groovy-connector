@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.misc.scriptedcommon
@@ -72,7 +73,7 @@ class ConnectorObjectDelegate extends AbstractICFBuilder<ConnectorObjectBuilder>
         ((ConnectorObjectBuilder) builder).setObjectClass(objectClass);
     }
 
-    void attribute(@DelegatesTo(AttributeDelegate) Closure attribute) {
+    void attribute(@DelegatesTo(AttributeDelegate) Closure<?> attribute) {
         delegateToTag(AttributeDelegate, attribute)
     }
 
@@ -83,7 +84,7 @@ class ConnectorObjectDelegate extends AbstractICFBuilder<ConnectorObjectBuilder>
             ((ConnectorObjectBuilder) builder).addAttribute(AttributeBuilder.build(name))
         }
     }
-    
+
     void attribute(String name, String... args) {
         addConnectorAttribute(name, args)
     }
@@ -164,10 +165,10 @@ class ConnectorObjectDelegate extends AbstractICFBuilder<ConnectorObjectBuilder>
         addConnectorAttribute(name, args)
     }
 
-    void attribute(String name, Map... args) {
+    void attribute(String name, Map<?, ?>... args) {
         addConnectorAttribute(name, args)
     }
-    
+
     private void addConnectorAttribute(String name, Object... args) {
         if (null != args) {
             ((ConnectorObjectBuilder) builder).addAttribute(name, args.toList())
@@ -183,7 +184,7 @@ class ConnectorObjectDelegate extends AbstractICFBuilder<ConnectorObjectBuilder>
     void attribute(Attribute... attrs) {
         ((ConnectorObjectBuilder) builder).addAttribute(attrs)
     }
-    
+
     void attributes(Attribute... attrs) {
         ((ConnectorObjectBuilder) builder).addAttribute(attrs)
     }

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.connectors;
@@ -45,7 +46,6 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
@@ -120,12 +120,11 @@ public class ScriptedAzureSampleTest {
     public void testQueryAll() throws Exception {
         ConnectorFacade facade = getFacade();
         ToListResultsHandler handler = new ToListResultsHandler();
-        SearchResult result = facade.search(new ObjectClass("user"), null, handler, null);
+        facade.search(new ObjectClass("user"), null, handler, null);
         Assert.assertFalse(handler.getObjects().isEmpty());
         handler = new ToListResultsHandler();
-        result =
-                facade.search(new ObjectClass("user"), FilterBuilder.equalTo(AttributeBuilder
-                        .build("accountEnabled", true)), handler, null);
+        facade.search(new ObjectClass("user"), FilterBuilder.equalTo(AttributeBuilder
+                .build("accountEnabled", true)), handler, null);
         Assert.assertFalse(handler.getObjects().isEmpty());
     }
 
@@ -159,7 +158,7 @@ public class ScriptedAzureSampleTest {
         final ConnectorFacade facade = getFacade();
         final ObjectClass user = new ObjectClass("user");
         //@formatter:off
-        /*       
+        /*
         {
             "accountEnabled": true,
             "displayName": "Alex Wu",

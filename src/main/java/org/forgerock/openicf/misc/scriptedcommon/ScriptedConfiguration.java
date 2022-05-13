@@ -2,7 +2,7 @@
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2013-2014 ForgeRock AS. All rights reserved.
- * Portions Copyright 2018 Wren Security.
+ * Portions Copyright 2018-2022 Wren Security.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -30,7 +30,6 @@ import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.LO
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -435,14 +434,14 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         config.setClasspathList(Arrays.asList(classpath));
     }
 
-    
+
     private String[] scriptRoots = null;
-    
+
     /**
      * @return the script roots
      */
     @ConfigurationProperty(groupMessageKey = "groovy.engine", required = true)
-    public String[] getScriptRoots() {        
+    public String[] getScriptRoots() {
         return scriptRoots;
     }
 
@@ -621,7 +620,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
             }
         }
     }
-    
+
     // =======================================================================
     // Methods for Script writers
     // =======================================================================
@@ -629,13 +628,13 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     private final ConcurrentMap<String, Object> propertyBag =
             new ConcurrentHashMap<String, Object>();
 
-    private Closure releaseClosure = null;
+    private Closure<?> releaseClosure = null;
 
-    public void setReleaseClosure(Closure releaseClosure) {
+    public void setReleaseClosure(Closure<?> releaseClosure) {
         this.releaseClosure = releaseClosure;
     }
 
-    public Closure getReleaseClosure() {
+    public Closure<?> getReleaseClosure() {
         return releaseClosure;
     }
 
@@ -657,9 +656,9 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     public void release() {
         synchronized (this) {
-            Closure c = getReleaseClosure();
+            Closure<?> c = getReleaseClosure();
             if (null != c) {
-                Closure clone = c.rehydrate(this, this, this);
+                Closure<?> clone = c.rehydrate(this, this, this);
                 clone.setResolveStrategy(Closure.DELEGATE_FIRST);
                 clone.call();
                 releaseClosure = null;
@@ -678,7 +677,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         logger.info("Load and compile configured scripts");
         if (getScriptRoots() == null || getScriptRoots().length < 1) {
             throw new ConfigurationException("Missing required 'scriptRoots' configuration property");
-        }     
+        }
         validateScript(getAuthenticateScriptFileName());
         validateScript(getCreateScriptFileName());
         validateScript(getDeleteScriptFileName());
@@ -709,8 +708,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return "/" + getClass().getPackage().getName().replace('.', '/') + "/CustomizerScript.groovy";
     }
 
-    protected Class getCustomizerClass() {
-        Class customizerClass = null;
+    protected Class<?> getCustomizerClass() {
+        Class<?> customizerClass = null;
         if (StringUtil.isBlank(customizerScriptFileName)) {
             URL url = getClass().getResource(getDefaultCustomizerScriptName());
             if (null != url) {
@@ -731,7 +730,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return customizerClass;
     }
 
-    protected Script createCustomizerScript(Class customizerClass, Binding binding) {
+    protected Script createCustomizerScript(Class<?> customizerClass, Binding binding) {
         binding.setVariable(CONFIGURATION, this);
         return InvokerHelper.createScript(customizerClass, binding);
     }
@@ -753,7 +752,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         }
     }
 
-    Class loadScript(String scriptName) {
+    Class<?> loadScript(String scriptName) {
         if (StringUtil.isNotBlank(scriptName)) {
             try {
                 return getGroovyScriptEngine().loadScriptByName(scriptName);
@@ -809,7 +808,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      */
     private void initializeCustomizer() {
         try {
-            Class customizerClass = getCustomizerClass();
+            Class<?> customizerClass = getCustomizerClass();
 
             if (null != customizerClass) {
                 Binding binding = new Binding();
@@ -825,7 +824,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     protected ClassLoader getParentLoader() {
         ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
         try {
-            Class c = contextLoader.loadClass(Script.class.getName());
+            Class<?> c = contextLoader.loadClass(Script.class.getName());
             if (c == Script.class) {
                 return contextLoader;
             }
@@ -869,7 +868,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         } else {
             throw new ConfigurationException("Missing required 'scriptRoots' configuration property");
         }
-        
+
         if (safeRoots.isEmpty()) {
             throw new ConfigurationException("The 'scriptRoots' does not contain valid root");
         }

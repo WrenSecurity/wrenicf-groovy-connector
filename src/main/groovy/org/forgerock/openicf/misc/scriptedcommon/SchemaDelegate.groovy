@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.misc.scriptedcommon
@@ -41,11 +42,11 @@ class SchemaDelegate extends AbstractICFBuilder<SchemaBuilder> {
         this.builder = builder
     }
 
-    void objectClass(@DelegatesTo(ObjectClassDelegate) Closure attribute) {
+    void objectClass(@DelegatesTo(ObjectClassDelegate) Closure<?> attribute) {
         delegateToTag(ObjectClassDelegate, attribute)
     }
 
-    void operationOption(@DelegatesTo(OperationOptionDelegate) Closure options) {
+    void operationOption(@DelegatesTo(OperationOptionDelegate) Closure<?> options) {
         delegateToTag(OperationOptionDelegate, options)
     }
 

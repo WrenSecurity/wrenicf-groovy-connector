@@ -16,14 +16,19 @@
 
 package org.forgerock.openicf.connectors;
 
-import static org.forgerock.http.routing.RouteMatchers.requestUriMatcher;
+import static org.forgerock.json.resource.Applications.simpleCrestApplication;
+import static org.forgerock.json.resource.Resources.newHandler;
+import static org.forgerock.json.resource.Resources.newInternalConnectionFactory;
+import static org.forgerock.json.resource.RouteMatchers.requestUriMatcher;
+import static org.forgerock.json.resource.http.CrestHttp.newHttpHandler;
 
 import org.forgerock.http.Handler;
 import org.forgerock.http.HttpApplication;
 import org.forgerock.http.HttpApplicationException;
-import org.forgerock.http.routing.RoutingMode;
 import org.forgerock.http.io.Buffer;
-import org.forgerock.http.routing.Router;
+import org.forgerock.http.routing.RoutingMode;
+import org.forgerock.json.resource.MemoryBackend;
+import org.forgerock.json.resource.Router;
 import org.forgerock.util.Factory;
 
 /**
@@ -34,11 +39,11 @@ public class TestHttpApplication implements HttpApplication {
     @Override
     public Handler start() throws HttpApplicationException {
         Router router = new Router();
-        router.addRoute(requestUriMatcher(RoutingMode.STARTS_WITH, "/rest/users"), MemoryBackendHandler.getHandler());
-        router.addRoute(requestUriMatcher(RoutingMode.STARTS_WITH, "/rest/groups"), MemoryBackendHandler.getHandler());
-        router.addRoute(requestUriMatcher(RoutingMode.STARTS_WITH, "/crest/users"), MemoryBackendHandler.getHandler());
-        router.addRoute(requestUriMatcher(RoutingMode.STARTS_WITH, "/crest/groups"), MemoryBackendHandler.getHandler());
-        return router;
+        router.addRoute(requestUriMatcher(RoutingMode.STARTS_WITH, "/rest/users"), newHandler(new MemoryBackend()));
+        router.addRoute(requestUriMatcher(RoutingMode.STARTS_WITH, "/rest/groups"), newHandler(new MemoryBackend()));
+        router.addRoute(requestUriMatcher(RoutingMode.STARTS_WITH, "/crest/users"), newHandler(new MemoryBackend()));
+        router.addRoute(requestUriMatcher(RoutingMode.STARTS_WITH, "/crest/groups"), newHandler(new MemoryBackend()));
+        return newHttpHandler(simpleCrestApplication(newInternalConnectionFactory(router), "testhttpapp", "1.0"));
     }
 
     @Override

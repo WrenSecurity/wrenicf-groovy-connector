@@ -1,6 +1,6 @@
 /*
  * Copyright 2003-2013 the original author or authors.
- * Portions Copyright 2018 Wren Security.
+ * Portions Copyright 2018-2022 Wren Security.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import org.apache.http.HttpEntity;
 import org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport;
 import org.codehaus.groovy.runtime.IOGroovyMethods;
 import org.forgerock.json.resource.QueryResponse;
-import org.forgerock.json.resource.ResourceResponse;
 
 import groovy.json.JsonException;
 import groovy.json.JsonLexer;
@@ -61,7 +60,7 @@ public class StreamingJsonSlurper {
      *         reader over a JSON content
      * @return a data structure of lists and maps
      */
-    public Object parse(Reader reader, Closure handler, Closure<Object> callback) {
+    public Object parse(Reader reader, Closure<Object> handler, Closure<Object> callback) {
         Object content = null;
 
         JsonLexer lexer = new JsonLexer(reader);
@@ -84,7 +83,7 @@ public class StreamingJsonSlurper {
         return content;
     }
 
-    public Object parse(HttpEntity entity, Closure handler, Closure<Object> callback) {
+    public Object parse(HttpEntity entity, Closure<Object> handler, Closure<Object> callback) {
         Reader reader = null;
         try {
             return parse(IOGroovyMethods.newReader(entity.getContent()), handler, callback);
@@ -104,9 +103,9 @@ public class StreamingJsonSlurper {
      *         the lexer
      * @return a list of JSON values
      */
-    @SuppressWarnings("unchecked")
-    private List parseArray(JsonLexer lexer, Closure handler) {
-        List content = new ArrayList();
+    @SuppressWarnings("resource")
+    private List<Object> parseArray(JsonLexer lexer, Closure<Object> handler) {
+        List<Object> content = new ArrayList<Object>();
 
         JsonToken currentToken;
 
@@ -169,8 +168,9 @@ public class StreamingJsonSlurper {
      *         the lexer
      * @return a Map representing a JSON object
      */
-    private Map parseObject(JsonLexer lexer, Closure handler) {
-        Map content = new HashMap();
+    @SuppressWarnings("resource")
+    private Map<Object, Object> parseObject(JsonLexer lexer, Closure<Object> handler) {
+        Map<Object, Object> content = new HashMap<Object, Object>();
 
         JsonToken previousToken = null;
         JsonToken currentToken = null;

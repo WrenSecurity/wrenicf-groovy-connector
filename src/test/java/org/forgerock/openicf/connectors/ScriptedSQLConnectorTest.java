@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.connectors;
@@ -39,7 +40,6 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConnector;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -65,11 +65,6 @@ import org.testng.annotations.Test;
  * @author Laszlo Hordos
  */
 public class ScriptedSQLConnectorTest {
-
-    /**
-     * Setup logging for the {@link ScriptedSQLConnectorTest}.
-     */
-    private static final Log logger = Log.getLog(ScriptedSQLConnectorTest.class);
 
     protected static final String TEST_NAME = "SQL";
 
@@ -217,7 +212,7 @@ public class ScriptedSQLConnectorTest {
         builder.addScriptArgument("isOK", true);
         facade.runScriptOnConnector(builder.build(), new OperationOptionsBuilder().build());
     }
-    
+
     private Set<Attribute> createUserAttributes(int index, String firstName, String lastName) {
         Set<Attribute> createAttributes = new HashSet<Attribute>();
         createAttributes.add(new Name(lastName.toLowerCase()));

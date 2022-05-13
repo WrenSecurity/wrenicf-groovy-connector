@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.connectors;
@@ -29,11 +30,11 @@ import java.util.Arrays;
 
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.MappedLoginService;
+import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.security.SecurityHandler;
+import org.eclipse.jetty.security.UserStore;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
@@ -82,21 +83,10 @@ public abstract class RESTTestBase {
         sh.setAuthenticator(new BasicAuthenticator());
         sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[]{cm}));
 
-        MappedLoginService loginService = new MappedLoginService() {
-
-            @Override
-            protected UserIdentity loadUser(String username) {
-                return null;
-            }
-
-            @Override
-            protected void loadUsers() throws IOException {
-                Credential credential = Credential.getCredential("Passw0rd");
-                String[] roles = new String[]{"user"};
-                putUser("admin", credential, roles);
-
-            }
-        };
+        HashLoginService loginService = new HashLoginService();
+        UserStore userStore = new UserStore();
+        userStore.addUser("admin", Credential.getCredential("Passw0rd"), new String[]{ "user" });
+        loginService.setUserStore(userStore);
         loginService.setName("user");
         sh.setLoginService(loginService);
         sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[]{cm}));
@@ -110,9 +100,6 @@ public abstract class RESTTestBase {
         System.out.append("Test port: ").println(httpPort);
 
         server = new Server(Integer.parseInt(httpPort));
-        for (org.eclipse.jetty.server.Connector c : server.getConnectors()) {
-            c.setHost("127.0.0.1");
-        }
 
         // Initializing the security handler
         ServletContextHandler handler =

@@ -2,7 +2,7 @@
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2014 ForgeRock AS. All Rights Reserved
- * Portions Copyright 2018 Wren Security.
+ * Portions Copyright 2018-2022 Wren Security.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -26,7 +26,6 @@
 package org.forgerock.openicf.misc.crest;
 
 import static org.forgerock.json.resource.Responses.newActionResponse;
-import static org.forgerock.json.resource.Responses.newQueryResponse;
 import static org.forgerock.json.resource.Responses.newResourceResponse;
 
 import java.io.IOException;
@@ -494,7 +493,7 @@ public abstract class AbstractRemoteConnection implements Connection {
             }
         } catch (URISyntaxException e) {
             throw new InternalServerErrorException(e);
-        }  
+        }
         rq.setHeader(HttpHeaders.CONNECTION, "close, TE");
         return rq;
     }

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.misc.scriptedcommon
@@ -49,7 +50,7 @@ class ICFObjectBuilder extends AbstractICFBuilder<Void> {
     }
 
     static
-    private <B> AbstractICFBuilder<B> delegateToTag(Class<? extends AbstractICFBuilder<B>> clazz, Closure body, B builder) {
+    private <B> AbstractICFBuilder<B> delegateToTag(Class<? extends AbstractICFBuilder<B>> clazz, Closure<?> body, B builder) {
         AbstractICFBuilder<B> tag = (AbstractICFBuilder<B>) clazz.newInstance(builder)
         def clone = body.rehydrate(tag, this, this)
         clone.resolveStrategy = Closure.DELEGATE_FIRST
@@ -57,15 +58,15 @@ class ICFObjectBuilder extends AbstractICFBuilder<Void> {
         return tag
     }
 
-    static ConnectorObject co(@DelegatesTo(ConnectorObjectDelegate) Closure attribute) {
+    static ConnectorObject co(@DelegatesTo(ConnectorObjectDelegate) Closure<?> attribute) {
         delegateToTag(ConnectorObjectDelegate, attribute, new ConnectorObjectBuilder()).builder.build();
     }
 
-    static SyncDelta delta(@DelegatesTo(SyncDeltaDelegate) Closure attribute) {
+    static SyncDelta delta(@DelegatesTo(SyncDeltaDelegate) Closure<?> attribute) {
         delegateToTag(SyncDeltaDelegate, attribute, new SyncDeltaBuilder()).builder.build();
     }
 
-    Schema schema(@DelegatesTo(SchemaDelegate) Closure attribute) {
+    Schema schema(@DelegatesTo(SchemaDelegate) Closure<?> attribute) {
         delegateToTag(SchemaDelegate, attribute, new SchemaBuilder(connectorClass)).builder.build();
     }
 }

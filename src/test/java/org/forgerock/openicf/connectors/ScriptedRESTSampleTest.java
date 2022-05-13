@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.connectors;
@@ -39,7 +40,6 @@ import org.fest.assertions.core.Condition;
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConnector;
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConnector;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
-import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -70,11 +70,6 @@ import org.testng.annotations.Test;
  * @author Laszlo Hordos
  */
 public class ScriptedRESTSampleTest {
-    /**
-     * Setup logging for the
-     * {@link org.forgerock.openicf.connectors.ScriptedSQLConnectorTest}.
-     */
-    private static final Log logger = Log.getLog(ScriptedRESTSampleTest.class);
 
     protected static final String REST_TEST_NAME = "REST_SAMPLE";
     protected static final String CREST_TEST_NAME = "CREST_SAMPLE";
@@ -230,7 +225,7 @@ public class ScriptedRESTSampleTest {
 
         Set<Attribute> createAttributes = createUserAttributes(1, "John", "Doe");
         Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
-        
+
          final List<SyncDelta> deltas = new LinkedList<SyncDelta>();
         facade.sync(ObjectClass.ACCOUNT, new SyncToken(0), new SyncResultsHandler() {
             public boolean handle(SyncDelta delta) {
@@ -284,11 +279,11 @@ public class ScriptedRESTSampleTest {
     protected String getTestName(){
         return REST_TEST_NAME;
     }
-    
+
     protected ConnectorFacade getFacade() {
         return getFacade(getTestName());
-    } 
-    
+    }
+
     protected ConnectorFacade getFacade(String environment) {
         if (null == facadeInstance) {
             if (CREST_TEST_NAME.equals(environment)) {

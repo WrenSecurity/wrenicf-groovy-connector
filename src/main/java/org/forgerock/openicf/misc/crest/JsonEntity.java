@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022 Wren Security.
  */
 
 package org.forgerock.openicf.misc.crest;
@@ -61,8 +62,8 @@ class JsonEntity extends StringEntity {
         } else {
             value = source;
         }
-        if (value instanceof Map) {
-            return JsonOutput.toJson((Map) value);
+        if (value instanceof Map<?, ?>) {
+            return JsonOutput.toJson((Map<?, ?>) value);
         } else if (value instanceof Number) {
             return JsonOutput.toJson((Number) value);
         } else if (value instanceof String) {
