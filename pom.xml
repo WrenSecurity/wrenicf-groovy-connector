@@ -19,13 +19,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.forgerock.openicf.connectors</groupId>
-        <artifactId>connectors-parent</artifactId>
+        <groupId>org.wrensecurity.wrenicf.connector</groupId>
+        <artifactId>connector-bundle-parent</artifactId>
         <version>1.5.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>groovy-connector</artifactId>
-    <version>1.4.3.0</version>
     <packaging>bundle</packaging>
 
     <name>Groovy Connector Toolkit for Wren:ICF</name>
@@ -39,7 +38,7 @@
         <url>https://github.com/WrenSecurity/wrenicf-groovy-connector</url>
         <connection>scm:git:git://github.com/WrenSecurity/wrenicf-groovy-connector.git</connection>
         <developerConnection>scm:git:git@github.com:WrenSecurity/wrenicf-groovy-connector.git</developerConnection>
-        <tag>1.4.3.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
@@ -72,21 +71,12 @@
         </repository>
     </repositories>
 
-    <mailingLists>
-        <mailingList>
-            <name>Wren Security Mailing List</name>
-            <archive>https://groups.google.com/forum/#!forum/wren-security</archive>
-            <subscribe>https://groups.google.com/forum/#!forum/wren-security</subscribe>
-            <unsubscribe>https://groups.google.com/forum/#!forum/wren-security</unsubscribe>
-            <post>wren-security@googlegroups.com</post>
-        </mailingList>
-    </mailingLists>
-
     <properties>
-        <connectorPackage>org.forgerock.openicf</connectorPackage>
+        <connectorPackage>org.forgerock.openicf.groovy</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
-        <framework.compatibilityVersion>1.4</framework.compatibilityVersion>
-        <framework.releaseVersion>1.0</framework.releaseVersion>
+        <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
+        <framework.releaseVersion>3.0-SNAPSHOT</framework.releaseVersion>
+        <commons.version>22.2.0</commons.version>
         <openicf.osgi.import.defaults>
             org.codehaus.groovy*;version="[2.2,3)",
             groovy.*;version="[2.2,3)",
@@ -97,10 +87,22 @@
         <openicf.osgi.embed />
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.wrensecurity.commons</groupId>
+                <artifactId>commons-bom</artifactId>
+                <version>${commons.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
-            <artifactId>connector-framework</artifactId>
+            <groupId>org.wrensecurity.wrenicf.framework</groupId>
+            <artifactId>connector-framework-core</artifactId>
         </dependency>
 
         <dependency>
@@ -162,7 +164,6 @@
             <optional>true</optional>
         </dependency>
 
-
         <!-- Scripted CREST dependencies -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -173,7 +174,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.forgerock.commons</groupId>
+            <groupId>org.wrensecurity.commons</groupId>
             <artifactId>json-resource</artifactId>
         </dependency>
 
@@ -203,25 +204,25 @@
         </dependency>
 
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
+            <groupId>org.wrensecurity.wrenicf.framework</groupId>
             <artifactId>connector-framework-internal</artifactId>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.forgerock.openicf.framework</groupId>
-            <artifactId>connector-test-common</artifactId>
+            <groupId>org.wrensecurity.wrenicf.framework</groupId>
+            <artifactId>connector-framework-test</artifactId>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.forgerock.commons</groupId>
+            <groupId>org.wrensecurity.commons</groupId>
             <artifactId>json-resource-http</artifactId>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.forgerock.http</groupId>
+            <groupId>org.wrensecurity.http</groupId>
             <artifactId>chf-http-servlet</artifactId>
             <scope>test</scope>
         </dependency>
@@ -315,18 +316,6 @@
                         <Require-Bundle>groovy-all</Require-Bundle>
                     </instructions>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.forgerock.maven.plugins</groupId>
-                <artifactId>openicf-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>reduce-pom</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>
