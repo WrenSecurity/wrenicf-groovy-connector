@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * " Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2025 Wren Security.
  *
  */
 
@@ -90,7 +91,7 @@ public class ScriptedSQLConfiguration extends ScriptedConfiguration {
      */
     static final Log log = Log.getLog(ScriptedSQLConfiguration.class);
 
-    @Delegate(excludes = "password")
+    @Delegate(excludes = ["getPassword", "setPassword"])
     private final PoolProperties poolProperties = new PoolProperties();
 
     // =======================================================================

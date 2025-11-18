@@ -2,7 +2,7 @@
  * DO NOT REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2013-2014 ForgeRock AS. All rights reserved.
- * Portions Copyright 2018-2022 Wren Security.
+ * Portions Copyright 2018-2025 Wren Security.
  *
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -737,7 +737,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     private final ConcurrentMap<String, Log> loggerCache = new ConcurrentHashMap<String, Log>(11);
 
-    Object evaluate(String scriptName, Binding binding, Object delegate) throws Exception {
+    protected Object evaluate(String scriptName, Binding binding, Object delegate) throws Exception {
         try {
             Script scr = getGroovyScriptEngine().createScript(scriptName, binding);
             binding.setVariable(LOGGER, getLogger(scr.getClass()));

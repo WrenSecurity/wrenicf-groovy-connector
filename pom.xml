@@ -97,20 +97,16 @@
     </mailingLists>
 
     <properties>
+        <pgpVerifyKeysVersion>1.9.5</pgpVerifyKeysVersion>
+        <maven.compiler.release>17</maven.compiler.release>
+
         <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
         <framework.releaseVersion>3.1</framework.releaseVersion>
+
         <wrensec.commons.version>22.6.1</wrensec.commons.version>
         <openicf.maven.plugin.version>1.5.0</openicf.maven.plugin.version>
-        <openicf.osgi.import.defaults>
-            org.codehaus.groovy*;version="[2.2,3)",
-            groovy.*;version="[2.2,3)",
-            groovyjar*;version="[2.2,3)",
-            groovyx.net.http*;resolution:=optional,
-            org.apache.http*;version="[4.3.0, 4.4.0)";resolution:=optional
-        </openicf.osgi.import.defaults>
-        <openicf.osgi.embed />
     </properties>
 
     <dependencies>
@@ -120,10 +116,28 @@
         </dependency>
 
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
+            <groupId>org.apache.groovy</groupId>
             <artifactId>groovy-all</artifactId>
-            <version>2.4.21</version>
+            <version>5.0.2</version>
+            <type>pom</type>
             <scope>provided</scope>
+
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.groovy</groupId>
+                    <artifactId>groovy-test</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.apache.groovy</groupId>
+                    <artifactId>groovy-test-junit5</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.yaml</groupId>
+                    <artifactId>snakeyaml</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Scripted SQL dependencies -->
@@ -297,6 +311,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
+                    <release>${maven.compiler.release}</release>
                     <testExcludes>
                         <exclude>src/test/resources/**/*.groovy</exclude>
                     </testExcludes>
@@ -306,7 +321,10 @@
             <plugin>
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
-                <version>1.13.1</version>
+                <version>4.2.1</version>
+                <configuration>
+                    <targetBytecode>${maven.compiler.release}</targetBytecode>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
@@ -323,11 +341,6 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Require-Bundle>groovy-all</Require-Bundle>
-                    </instructions>
-                </configuration>
             </plugin>
 
             <plugin>

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2022-2025 Wren Security.
  */
 
 import groovy.json.JsonOutput
@@ -140,7 +141,7 @@ class SchemaSlurper {
             [objectDefinition.nativeType,
              [resourceContainer: objectName,
               attributes       :
-                      objectDefinition.properties.collectEntries {String propertyName, Map propertyDefinition ->
+                      objectDefinition.get("properties").collectEntries {String propertyName, Map propertyDefinition ->
                           if (AttributeUtil.namesEqual(Uid.NAME, propertyDefinition.nativeName)) {
                               //Ignore it
                               return null
