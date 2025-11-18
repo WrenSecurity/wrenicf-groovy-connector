@@ -140,7 +140,7 @@ class SchemaSlurper {
             [objectDefinition.nativeType,
              [resourceContainer: objectName,
               attributes       :
-                      objectDefinition.properties.collectEntries {String propertyName, Map propertyDefinition ->
+                      objectDefinition.get("properties").collectEntries {String propertyName, Map propertyDefinition ->
                           if (AttributeUtil.namesEqual(Uid.NAME, propertyDefinition.nativeName)) {
                               //Ignore it
                               return null

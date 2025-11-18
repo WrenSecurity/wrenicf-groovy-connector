@@ -90,7 +90,7 @@ public class ScriptedSQLConfiguration extends ScriptedConfiguration {
      */
     static final Log log = Log.getLog(ScriptedSQLConfiguration.class);
 
-    @Delegate(excludes = "password")
+    @Delegate(excludes = ['getPassword', 'setPassword'])
     private final PoolProperties poolProperties = new PoolProperties();
 
     // =======================================================================

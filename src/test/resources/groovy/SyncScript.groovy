@@ -207,20 +207,11 @@ switch (operation) {
                             object {
                                 uid '13'
                                 id '13'
-                                attribute {
-                                    name 'sureName'
-                                    value 'Foo'
-                                }
-                                attribute {
-                                    name 'lastName'
-                                    value 'Bar'
-                                }
-                                attribute {
-                                    name 'groups'
-                                    values 'Group1', 'Group2'
-                                }
-                                attribute 'active', true
-                                attribute 'NULL'
+                                attribute('sureName', 'Foo')
+                                attribute('lastName', 'Bar')
+                                attribute('groups', ['Group1', 'Group2'])
+                                attribute('active', true)
+                                attribute('NULL')
                             }
                         }
                 )
@@ -231,20 +222,11 @@ switch (operation) {
                     object {
                         uid '13'
                         id '13'
-                        attribute {
-                            name 'sureName'
-                            value 'Foo'
-                        }
-                        attribute {
-                            name 'lastName'
-                            value 'Bar'
-                        }
-                        attribute {
-                            name 'groups'
-                            values 'Group1', 'Group2'
-                        }
-                        attribute 'active', true
-                        attribute 'NULL'
+                        attribute('sureName', 'Foo')
+                        attribute('lastName', 'Bar')
+                        attribute('groups', ['Group1', 'Group2'])
+                        attribute('active', true)
+                        attribute('NULL')
                         attributes(new Attribute('emails', [
                                 [
                                         "address"   : "foo@example.com",

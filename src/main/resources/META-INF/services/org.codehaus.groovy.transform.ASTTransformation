@@ -2,4 +2,4 @@
 groovy.grape.GrabAnnotationTransformation
 
 #global transformation for AST Builder
-org.codehaus.groovy.ast.builder.AstBuilderTransformation
+org.apache.groovy.ast.builder.AstBuilderTransformation

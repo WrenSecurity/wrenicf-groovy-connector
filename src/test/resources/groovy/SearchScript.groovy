@@ -157,40 +157,22 @@ switch (objectClass) {
                     uid '12'
                     id '12'
                     delegate.objectClass(objectClass)
-                    attribute {
-                        name 'sureName'
-                        value 'Foo'
-                    }
-                    attribute {
-                        name 'lastName'
-                        value 'Bar'
-                    }
-                    attribute {
-                        name 'groups'
-                        values 'Group1', 'Group2'
-                    }
-                    attribute 'active', true
-                    attribute 'NULL'
+                    attribute('sureName', 'Foo')
+                    attribute('lastName', 'Bar')
+                    attribute('groups', ['Group1', 'Group2'])
+                    attribute('active', true)
+                    attribute('NULL')
                 }
         )
         handler({
             uid '13'
             id '13'
             delegate.objectClass(objectClass)
-            attribute {
-                name 'sureName'
-                value 'Foo'
-            }
-            attribute {
-                name 'lastName'
-                value 'Bar'
-            }
-            attribute {
-                name 'groups'
-                values 'Group1', 'Group2'
-            }
-            attribute 'active', true
-            attribute 'NULL'
+            attribute('sureName', 'Foo')
+            attribute('lastName', 'Bar')
+            attribute('groups', ['Group1', 'Group2'])
+            attribute('active', true)
+            attribute('NULL')
             attributes(new Attribute('emails', [
                     [
                             "address"   : "foo@example.com",
@@ -209,5 +191,3 @@ switch (objectClass) {
         throw new UnsupportedOperationException(operation.name() + " operation of type:" +
                 objectClass.objectClassValue + " is not supported.")
 }
-
-

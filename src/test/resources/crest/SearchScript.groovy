@@ -179,7 +179,7 @@ if (objectClassInfo != null) {
                                     attribute key
                                 } else {
                                     attribute {
-                                        name key
+                                        delegate.name = key
                                         attributeValue.each {
                                             delegate.value CRESTHelper.fromJSONToAttribute(value.attributeInfo, it)
                                         }

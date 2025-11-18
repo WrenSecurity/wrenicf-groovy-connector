@@ -737,7 +737,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     private final ConcurrentMap<String, Log> loggerCache = new ConcurrentHashMap<String, Log>(11);
 
-    Object evaluate(String scriptName, Binding binding, Object delegate) throws Exception {
+    public Object evaluate(String scriptName, Binding binding, Object delegate) throws Exception {
         try {
             Script scr = getGroovyScriptEngine().createScript(scriptName, binding);
             binding.setVariable(LOGGER, getLogger(scr.getClass()));
