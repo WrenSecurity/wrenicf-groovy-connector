@@ -25,7 +25,7 @@
 
 package org.forgerock.openicf.connectors;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
 
 import java.util.ArrayList;

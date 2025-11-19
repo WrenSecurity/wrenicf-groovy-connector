@@ -25,13 +25,13 @@
 
 package org.forgerock.openicf.connectors;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.forgerock.openicf.connectors.RESTTestBase.createConnectorFacade;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import org.fest.assertions.core.Condition;
+import org.assertj.core.api.Condition;
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConnector;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
 import org.identityconnectors.common.CollectionUtil;
