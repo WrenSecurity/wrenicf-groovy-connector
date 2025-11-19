@@ -24,7 +24,8 @@
 
 package org.forgerock.openicf.misc.scriptedcommon;
 
-import static org.fest.assertions.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.data.MapEntry.entry;
 import static org.forgerock.openicf.connectors.RESTTestBase.createConnectorFacade;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.*;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.not;
@@ -385,9 +386,8 @@ public class ScriptedConnectorTest {
         builder.setScriptText("return arg");
         builder.addScriptArgument("arg01", true);
         builder.addScriptArgument("arg02", "String");
-        assertThat((Map<?, ?>) facade.runScriptOnResource(builder.build(), null)).contains(
-                entry("arg01", true), entry("arg02", "String"));
-
+        assertThat((Map<Object, Object>) facade.runScriptOnResource(builder.build(), null))
+                .contains(entry("arg01", true), entry("arg02", "String"));
     }
 
     @Test(expectedExceptions = ConnectorException.class,
@@ -572,7 +572,7 @@ public class ScriptedConnectorTest {
         Assert.assertEquals(handler.getObjects().size(), 10);
         Assert.assertNotNull(result.getPagedResultsCookie());
 
-        Map<?, ?> queryMap = (Map<?, ?>) new JsonSlurper().parseText(result.getPagedResultsCookie());
+        Map<Object, Object> queryMap = (Map<Object, Object>) new JsonSlurper().parseText(result.getPagedResultsCookie());
         assertThat(queryMap).contains(entry("operation", "AND"));
 
         left =
