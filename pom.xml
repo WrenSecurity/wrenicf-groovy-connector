@@ -13,7 +13,7 @@
     information: "Portions copyright [year] [name of copyright owner]".
 
     Copyright (c) 2011-2014 ForgeRock AS. All rights reserved.
-    Portions Copyright 2018-2022 Wren Security.
+    Portions Copyright 2018-2025 Wren Security.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -35,6 +35,7 @@
     </description>
 
     <url>https://github.com/WrenSecurity/wrenicf-groovy-connector</url>
+
     <scm>
         <url>https://github.com/WrenSecurity/wrenicf-groovy-connector</url>
         <connection>scm:git:git://github.com/WrenSecurity/wrenicf-groovy-connector.git</connection>
@@ -61,24 +62,30 @@
             <id>wrensecurity-releases</id>
             <name>Wren Security Release Repository</name>
             <url>https://wrensecurity.jfrog.io/wrensecurity/releases</url>
+
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
+
             <releases>
                 <enabled>true</enabled>
             </releases>
         </repository>
+
         <repository>
             <id>wrensecurity-snapshots</id>
             <name>Wren Security Snapshot Repository</name>
             <url>https://wrensecurity.jfrog.io/wrensecurity/snapshots</url>
+
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
+
             <releases>
                 <enabled>false</enabled>
             </releases>
         </repository>
+
     </repositories>
 
     <issueManagement>
@@ -144,7 +151,7 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jdbc</artifactId>
-            <version>7.0.53</version>
+            <version>9.0.112</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
@@ -156,11 +163,13 @@
             <version>0.7.1</version>
             <scope>provided</scope>
             <optional>true</optional>
+
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
                     <artifactId>httpclient</artifactId>
                 </exclusion>
+
                 <exclusion>
                     <groupId>commons-collections</groupId>
                     <artifactId>commons-collections</artifactId>
@@ -230,8 +239,9 @@
 
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
+            <artifactId>mockito-core</artifactId>
+            <version>5.20.0</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -263,21 +273,21 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
-            <version>9.4.46.v20220331</version>
+            <version>10.0.26</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>9.4.46.v20220331</version>
+            <version>10.0.26</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>2.1.212</version>
+            <version>2.2.222</version>
             <scope>test</scope>
         </dependency>
 
@@ -292,14 +302,14 @@
         <dependency>
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-client-api</artifactId>
-            <version>4.9.0</version>
+            <version>5.0.0</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-client-core</artifactId>
-            <version>4.9.0</version>
+            <version>5.0.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -310,8 +320,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+
                 <configuration>
                     <release>${maven.compiler.release}</release>
+
                     <testExcludes>
                         <exclude>src/test/resources/**/*.groovy</exclude>
                     </testExcludes>
@@ -322,9 +334,11 @@
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
                 <version>4.2.1</version>
+
                 <configuration>
                     <targetBytecode>${maven.compiler.release}</targetBytecode>
                 </configuration>
+
                 <executions>
                     <execution>
                         <goals>
@@ -346,6 +360,7 @@
             <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
+
                 <executions>
                     <execution>
                         <goals>
@@ -358,14 +373,18 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.6.1</version>
+
                 <executions>
                     <execution>
                         <id>reserve-network-port</id>
+
                         <goals>
                             <goal>reserve-network-port</goal>
                         </goals>
+
                         <phase>process-resources</phase>
+
                         <configuration>
                             <portNames>
                                 <portName>jetty.http.port</portName>
@@ -378,6 +397,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+
                 <configuration>
                     <systemPropertyVariables>
                         <jetty.http.port>${jetty.http.port}</jetty.http.port>
@@ -388,6 +408,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
+
                 <configuration>
                     <excludes>**/generated-sources/groovy-stubs/**/*</excludes>
                 </configuration>
@@ -396,6 +417,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
+
                 <configuration>
                     <excludes>
                         <exclude>**/groovy-stubs/*.java</exclude>
@@ -411,12 +433,15 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jxr-plugin</artifactId>
                 <version>3.2.0</version>
+
                 <configuration>
                     <linkJavadoc>true</linkJavadoc>
+
                     <includes>
                         <include>**/*.java</include>
                         <include>**/*.groovy</include>
                     </includes>
+
                     <excludes>
                         <exclude>target/generated/groovy-stubs</exclude>
                     </excludes>
@@ -426,14 +451,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+
                 <configuration>
                     <descriptors>
                         <descriptor>src/assemble/samples.xml</descriptor>
                     </descriptors>
                 </configuration>
+
                 <executions>
                     <execution>
                         <phase>package</phase>
+
                         <goals>
                             <goal>single</goal>
                         </goals>
