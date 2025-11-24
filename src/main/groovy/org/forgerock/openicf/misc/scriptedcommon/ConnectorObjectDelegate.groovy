@@ -20,7 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- * Portions Copyright 2022 Wren Security.
+ * Portions Copyright 2022-2025 Wren Security.
  */
 
 package org.forgerock.openicf.misc.scriptedcommon
@@ -74,6 +74,7 @@ class ConnectorObjectDelegate extends AbstractICFBuilder<ConnectorObjectBuilder>
     }
 
     void attribute(@DelegatesTo(AttributeDelegate) Closure<?> attribute) {
+        attribute.resolveStrategy = Closure.DELEGATE_FIRST
         delegateToTag(AttributeDelegate, attribute)
     }
 
