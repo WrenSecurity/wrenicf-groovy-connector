@@ -28,7 +28,6 @@ jobs:
     uses: WrenSecurity/.github/.github/workflows/sonar-maven.yml@main
     with:
       commit_sha: ${{ github.event.workflow_run.head_sha }}
-      java_version: 11
       project_key: 'WrenSecurity_wrenicf-groovy-connector'
       pull_request: ${{ needs.prepare.outputs.pull_request }}
     secrets:
