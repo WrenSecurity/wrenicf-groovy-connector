@@ -110,7 +110,7 @@
         <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
-        <framework.releaseVersion>3.1</framework.releaseVersion>
+        <framework.releaseVersion>3.2</framework.releaseVersion>
 
         <wrensec.commons.version>22.6.1</wrensec.commons.version>
         <openicf.maven.plugin.version>1.5.0</openicf.maven.plugin.version>
