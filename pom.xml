@@ -13,17 +13,18 @@
     information: "Portions copyright [year] [name of copyright owner]".
 
     Copyright (c) 2011-2014 ForgeRock AS. All rights reserved.
-    Portions Copyright 2018-2025 Wren Security.
+    Portions Copyright 2018-2026 Wren Security.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.wrensecurity.wrenicf.connector</groupId>
+        <groupId>org.wrensecurity.wrenicf.connectors</groupId>
         <artifactId>connector-bundle-parent</artifactId>
-        <version>1.5.3.2</version>
+        <version>1.5.4.1</version>
     </parent>
 
+    <groupId>org.wrensecurity.wrenicf.connectors</groupId>
     <artifactId>groovy-connector</artifactId>
     <version>1.5.3.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
@@ -104,15 +105,15 @@
     </mailingLists>
 
     <properties>
-        <pgpVerifyKeysVersion>1.9.5</pgpVerifyKeysVersion>
+        <pgpVerifyKeysVersion>1.9.14</pgpVerifyKeysVersion>
         <maven.compiler.release>17</maven.compiler.release>
 
         <connectorPackage>org.forgerock.openicf</connectorPackage>
         <connectorClass>ScriptedConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
-        <framework.releaseVersion>3.2</framework.releaseVersion>
+        <framework.releaseVersion>4.1</framework.releaseVersion>
 
-        <wrensec.commons.version>22.6.1</wrensec.commons.version>
+        <wrensec.commons.version>23.0.0</wrensec.commons.version>
         <openicf.maven.plugin.version>1.5.0</openicf.maven.plugin.version>
     </properties>
 
@@ -271,16 +272,16 @@
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>10.0.26</version>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-servlet</artifactId>
+            <version>12.1.6</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>10.0.26</version>
+            <version>12.1.6</version>
             <scope>test</scope>
         </dependency>
 
