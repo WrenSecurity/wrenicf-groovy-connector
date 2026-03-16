@@ -20,24 +20,21 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- * Portions Copyright 2022 Wren Security.
+ * Portions Copyright 2022-2026 Wren Security.
  */
 
 package org.forgerock.openicf.connectors;
 
 import java.io.IOException;
-import java.util.Arrays;
 
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.Constraint;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.security.UserStore;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.security.Constraint;
+import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Credential;
 
 import org.forgerock.http.HttpApplication;
@@ -71,17 +68,10 @@ public abstract class RESTTestBase {
     private ConnectorFacade facade = null;
     private Server server = null;
 
-    private SecurityHandler getSecurityHandler() throws IOException {
-        Constraint constraint = new Constraint(Constraint.__BASIC_AUTH, "user");
-        constraint.setAuthenticate(true);
-
-        ConstraintMapping cm = new ConstraintMapping();
-        cm.setPathSpec("/*");
-        cm.setConstraint(constraint);
-
-        ConstraintSecurityHandler sh = new ConstraintSecurityHandler();
+    private SecurityHandler getSecurityHandler() {
+        SecurityHandler.PathMapped sh = new SecurityHandler.PathMapped();
         sh.setAuthenticator(new BasicAuthenticator());
-        sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[]{cm}));
+        sh.put("/*", Constraint.from("user"));
 
         HashLoginService loginService = new HashLoginService();
         UserStore userStore = new UserStore();
@@ -89,7 +79,6 @@ public abstract class RESTTestBase {
         loginService.setUserStore(userStore);
         loginService.setName("user");
         sh.setLoginService(loginService);
-        sh.setConstraintMappings(Arrays.asList(new ConstraintMapping[]{cm}));
 
         return sh;
     }
@@ -103,7 +92,7 @@ public abstract class RESTTestBase {
 
         // Initializing the security handler
         ServletContextHandler handler =
-                new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS
+                new ServletContextHandler("/", ServletContextHandler.SESSIONS
                         | ServletContextHandler.SECURITY);
 
         // Attach the CREST router
