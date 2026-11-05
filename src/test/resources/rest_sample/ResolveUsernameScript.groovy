@@ -20,13 +20,9 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2026 Wren Security.
  */
 
-@Grapes([
-        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
-        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
-)
-import groovyx.net.http.RESTClient
 import org.apache.http.client.HttpClient
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
 import org.forgerock.openicf.connectors.scriptedsql.ScriptedSQLConfiguration
@@ -39,8 +35,7 @@ import java.sql.Connection
 
 def operation = operation as OperationType
 def configuration = configuration as ScriptedRESTConfiguration
-def httpClient = connection as HttpClient
-def connection = customizedConnection as RESTClient
+def connection = connection as HttpClient
 def username = username as String
 def log = log as Log
 def objectClass = objectClass as ObjectClass

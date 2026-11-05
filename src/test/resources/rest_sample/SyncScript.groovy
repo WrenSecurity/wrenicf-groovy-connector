@@ -20,13 +20,15 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2026 Wren Security.
  */
-@Grapes([
-        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
-        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
-)
-import groovyx.net.http.RESTClient
+
+import groovy.json.JsonSlurper
+import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
+import org.apache.http.client.ResponseHandler
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.utils.URIBuilder
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
@@ -34,203 +36,134 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.SyncToken
 
-import static groovyx.net.http.Method.GET
-
 def operation = operation as OperationType
 def configuration = configuration as ScriptedRESTConfiguration
-def httpClient = connection as HttpClient
-def connection = customizedConnection as RESTClient
+def connection = connection as HttpClient
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 
 log.info("Entering " + operation + " Script");
 
+// Reads the JSON resource. With allowMissing, returns null when it does not exist instead of failing.
+def getJson = { URI uri, boolean allowMissing = false ->
+    connection.execute(new HttpGet(uri), { HttpResponse response ->
+        def status = response.statusLine.statusCode
+        if (status == 404 && allowMissing) {
+            return null
+        }
+        if (status != 200) {
+            throw new ConnectorException(response.statusLine.toString())
+        }
+        return new JsonSlurper().parse(response.entity.content, 'UTF-8')
+    } as ResponseHandler)
+}
 
 if (OperationType.GET_LATEST_SYNC_TOKEN.equals(operation)) {
 
-    return connection.request(GET) { req ->
-        uri.path = '/changelog'
-        uri.query = [
-                _queryFilter: 'true',
-                _pageSize   : '1'
-        ]
+    def json = getJson(new URIBuilder(configuration.serviceAddress.resolve('changelog'))
+            .addParameter('_queryFilter', 'true')
+            .addParameter('_pageSize', '1')
+            .build())
 
-        response.success = { resp, json ->
-            def lastToken = "0"
-            json.result.each() { it ->
-                lastToken = it._id
-            }
-            return new SyncToken(lastToken)
-        }
-
-
-        response.failure = { resp, json ->
-            throw new ConnectorException(json.message)
-        }
+    def lastToken = "0"
+    json.result.each() { it ->
+        lastToken = it._id
     }
+    return new SyncToken(lastToken)
 
 } else if (OperationType.SYNC.equals(operation)) {
     def token = token as Object
     log.info("Entering SYNC");
+
+    String resourcePath
+    String baseDN
+    Map<String, Closure> attributes
     switch (objectClass) {
         case ObjectClass.ACCOUNT:
-            return connection.request(GET) { req ->
-                uri.path = '/changelog'
-                uri.query = [
-                        _queryFilter: "_id gt \"${token}\" and targetDN co \"ou=people,dc=example,dc=com\"",
-                        _fields     : '_id,changeType,targetDN'
-                ]
-
-                response.success = { resp, json ->
-                    def lastToken = "0"
-                    json.result.each() { changeLogEntry ->
-                        lastToken = changeLogEntry._id
-
-                        String resourceId = changeLogEntry.targetDN
-                        resourceId = resourceId.substring(4, resourceId.indexOf(','))
-
-                        handler({
-                            syncToken lastToken
-                            if ("add".equals(changeLogEntry.changeType)) {
-                                CREATE()
-                            } else if ("modify".equals(changeLogEntry.changeType)) {
-                                UPDATE()
-                            } else if ("delete".equals(changeLogEntry.changeType)) {
-                                DELETE()
-                                object {
-                                    uid resourceId
-                                    id resourceId
-                                    delegate.objectClass(objectClass)
-                                }
-                                return
-                            } else {
-                                CREATE_OR_UPDATE()
-                            }
-
-                            connection.request(GET) { getReq ->
-                                uri.path = '/users/' + resourceId
-
-                                response.success = { getResp, value ->
-                                    object {
-                                        uid value._id
-                                        id value._id
-                                        attribute 'telephoneNumber', value?.contactInformation?.telephoneNumber
-                                        attribute 'emailAddress', value?.contactInformation?.emailAddress
-                                        attribute 'familyName', value?.name?.familyName
-                                        attribute 'givenName', value?.name?.givenName
-                                        attribute 'displayName', value?.displayName
-                                        attribute 'managerId', value?.manager?._id
-                                        attribute 'managerDisplayName', value?.manager?.displayName
-                                        attribute 'groups', value?.groups
-                                        attribute 'created', value?.meta?.created
-                                        attribute 'lastModified', value?.meta?.lastModified
-                                    }
-
-                                }
-
-                                response."404" = { getResp, error ->
-                                    DELETE()
-                                    object {
-                                        uid resourceId
-                                        id resourceId
-                                        delegate.objectClass(objectClass)
-                                    }
-                                }
-
-                                response.failure = { getResp, error ->
-                                    throw new ConnectorException(error.message)
-                                }
-                            }
-
-                        })
-                    }
-                    return new SyncToken(lastToken)
-                }
-
-                response.failure = { resp, json ->
-                    throw new ConnectorException(json.message)
-                }
-            }
-            break;
-
+            resourcePath = 'users/'
+            baseDN = 'ou=people,dc=example,dc=com'
+            attributes = [
+                    telephoneNumber: { it?.contactInformation?.telephoneNumber },
+                    emailAddress: { it?.contactInformation?.emailAddress },
+                    familyName: { it?.name?.familyName },
+                    givenName: { it?.name?.givenName },
+                    displayName: { it?.displayName },
+                    managerId: { it?.manager?._id },
+                    managerDisplayName: { it?.manager?.displayName },
+                    groups: { it?.groups },
+                    created: { it?.meta?.created },
+                    lastModified: { it?.meta?.lastModified }
+            ]
+            break
         case ObjectClass.GROUP:
-            return connection.request(GET) { req ->
-                uri.path = '/changelog'
-                uri.query = [
-                        _queryFilter: "_id gt \"${token}\" and targetDN co \"ou=groups,dc=example,dc=com\"",
-                        _fields     : '_id,changeType,targetDN'
-                ]
+            resourcePath = 'groups/'
+            baseDN = 'ou=groups,dc=example,dc=com'
+            attributes = [
+                    members: { it?.members },
+                    displayName: { it?.displayName },
+                    created: { it?.meta?.created },
+                    lastModified: { it?.meta?.lastModified }
+            ]
+            break
+        default:
+            throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                    objectClass.objectClassValue + " is not supported.")
+    }
 
-                response.success = { resp, json ->
-                    def lastToken = "0"
-                    json.result.each() { changeLogEntry ->
-                        lastToken = changeLogEntry._id
+    def changes = getJson(new URIBuilder(configuration.serviceAddress.resolve('changelog'))
+            .addParameter('_queryFilter', "_id gt \"${token}\" and targetDN co \"${baseDN}\"")
+            .addParameter('_fields', '_id,changeType,targetDN')
+            .build())
 
-                        String resourceId = changeLogEntry.targetDN
-                        resourceId = resourceId.substring(3, resourceId.indexOf(','))
+    def lastToken = "0"
+    changes.result.each() { changeLogEntry ->
+        lastToken = changeLogEntry._id
 
-                        handler({
-                            syncToken lastToken
-                            if ("add".equals(changeLogEntry.changeType)) {
-                                CREATE()
-                            } else if ("modify".equals(changeLogEntry.changeType)) {
-                                UPDATE()
-                            } else if ("delete".equals(changeLogEntry.changeType)) {
-                                DELETE()
-                                object {
-                                    uid resourceId
-                                    id resourceId
-                                    delegate.objectClass(objectClass)
-                                }
-                                return
-                            } else {
-                                CREATE_OR_UPDATE()
-                            }
+        // The resource ID is the RDN value, e.g. "bjensen" in "uid=bjensen,ou=people,dc=example,dc=com"
+        String resourceId = changeLogEntry.targetDN
+        resourceId = resourceId.substring(resourceId.indexOf('=') + 1, resourceId.indexOf(','))
 
-                            connection.request(GET) { getReq ->
-                                uri.path = '/groups/' + resourceId
-
-                                response.success = { getResp, value ->
-                                    object {
-                                        uid value._id
-                                        id value._id
-                                        delegate.objectClass(objectClass)
-                                        attribute 'members', value?.members
-                                        attribute 'displayName', value?.displayName
-                                        attribute 'created', value?.meta?.created
-                                        attribute 'lastModified', value?.meta?.lastModified
-                                    }
-
-                                }
-
-                                response."404" = { getResp, error ->
-                                    DELETE()
-                                    object {
-                                        uid resourceId
-                                        id resourceId
-                                        delegate.objectClass(objectClass)
-                                    }
-                                }
-
-                                response.failure = { getResp, error ->
-                                    throw new ConnectorException(error.message)
-                                }
-                            }
-
-                        })
-                    }
-                    return new SyncToken(lastToken)
+        handler({
+            syncToken lastToken
+            if ("add".equals(changeLogEntry.changeType)) {
+                CREATE()
+            } else if ("modify".equals(changeLogEntry.changeType)) {
+                UPDATE()
+            } else if ("delete".equals(changeLogEntry.changeType)) {
+                DELETE()
+                object {
+                    uid resourceId
+                    id resourceId
+                    delegate.objectClass(objectClass)
                 }
+                return
+            } else {
+                CREATE_OR_UPDATE()
+            }
 
-
-                response.failure = { resp, json ->
-                    throw new ConnectorException(json.message)
+            def value = getJson(configuration.serviceAddress.resolve(resourcePath + URLEncoder.encode(resourceId, 'UTF-8')), true)
+            if (value == null) {
+                // Deleted after the change was recorded
+                DELETE()
+                object {
+                    uid resourceId
+                    id resourceId
+                    delegate.objectClass(objectClass)
+                }
+            } else {
+                object {
+                    uid value._id
+                    id value._id
+                    delegate.objectClass(objectClass)
+                    attributes.each { name, getter ->
+                        attribute name, getter(value)
+                    }
                 }
             }
-            break;
+        })
     }
+    return new SyncToken(lastToken)
 
 } else { // action not implemented
     log.error("Sync script: action '" + operation + "' is not implemented in this script");
 }
-

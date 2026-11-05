@@ -20,19 +20,23 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2026 Wren Security.
  */
 
-@Grapes([
-        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
-        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
-)
-import groovyx.net.http.RESTClient
+import groovy.json.JsonSlurper
+import org.apache.http.HttpHost
+import org.apache.http.HttpResponse
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.CredentialsProvider
 import org.apache.http.client.HttpClient
+import org.apache.http.client.ResponseHandler
+import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.protocol.HttpClientContext
+import org.apache.http.client.utils.URIBuilder
+import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.impl.client.BasicAuthCache
+import org.apache.http.impl.client.BasicCookieStore
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
@@ -45,45 +49,42 @@ import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 import org.identityconnectors.framework.common.objects.Uid
 
-import static groovyx.net.http.Method.GET
-
 def operation = operation as OperationType
 def configuration = configuration as ScriptedRESTConfiguration
-def httpClient = connection as HttpClient
-def connection = customizedConnection as RESTClient
+def connection = connection as HttpClient
 def username = username as String
 def log = log as Log
 def objectClass = objectClass as ObjectClass
 def options = options as OperationOptions
-def password = password as Object;
+def password = password as GuardedString
 
 log.info("Entering " + operation + " Script");
 
-def authClient = new RESTClient(configuration.serviceAddress, configuration.defaultContentType)
-authClient.setClient(httpClient)
-authClient.setHeaders(connection.getHeaders())
+// Read the user's own entry with the user's credentials instead of the configured ones
+def credentialsProvider = new BasicCredentialsProvider()
+credentialsProvider.setCredentials(AuthScope.ANY,
+        new UsernamePasswordCredentials(username, SecurityUtil.decrypt(password)));
+def authCache = new BasicAuthCache()
+authCache.put(new HttpHost(configuration.serviceAddress.host, configuration.serviceAddress.port,
+        configuration.serviceAddress.scheme), new BasicScheme())
 
-CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-credentialsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT),
-        new UsernamePasswordCredentials(username, SecurityUtil.decrypt(password as GuardedString)));
+def context = HttpClientContext.create()
+context.setCredentialsProvider(credentialsProvider)
+context.setAuthCache(authCache)
+// Use an empty cookie store, so the session of the connector's own credentials is not reused
+context.setCookieStore(new BasicCookieStore())
 
-return authClient.request(GET) { req ->
-    uri.path = '/users/' + username
-    uri.query = [
-            _fields: '_id'
-    ]
-    context.setAttribute(HttpClientContext.AUTH_CACHE, new BasicAuthCache())
-    context.setAttribute(HttpClientContext.CREDS_PROVIDER, credentialsProvider)
+def uri = new URIBuilder(configuration.serviceAddress.resolve('users/' + URLEncoder.encode(username, 'UTF-8')))
+        .addParameter('_fields', '_id')
+        .build()
 
-    response.success = { resp, json ->
-        return new Uid(json._id)
+return connection.execute(new HttpGet(uri), { HttpResponse response ->
+    switch (response.statusLine.statusCode) {
+        case 200:
+            return new Uid(new JsonSlurper().parse(response.entity.content, 'UTF-8')._id as String)
+        case 401:
+            throw new InvalidCredentialException()
+        default:
+            throw new ConnectorSecurityException(response.statusLine.toString())
     }
-
-    response."401" = { resp, json ->
-        throw new InvalidCredentialException();
-    }
-
-    response.failure = { resp, json ->
-        throw new ConnectorSecurityException()
-    }
-}
+} as ResponseHandler, context)

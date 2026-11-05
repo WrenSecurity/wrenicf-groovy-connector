@@ -20,18 +20,21 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2026 Wren Security.
  */
-@Grapes([
-        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
-        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
-)
-import groovyx.net.http.RESTClient
+
+import groovy.json.JsonSlurper
+import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
+import org.apache.http.client.ResponseHandler
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.utils.URIBuilder
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
 import org.forgerock.openicf.misc.crest.CRESTFilterVisitor
 import org.forgerock.openicf.misc.crest.VisitorParameter
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
+import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.objects.Attribute
 import org.identityconnectors.framework.common.objects.AttributeUtil
 import org.identityconnectors.framework.common.objects.Name
@@ -41,12 +44,9 @@ import org.identityconnectors.framework.common.objects.SearchResult
 import org.identityconnectors.framework.common.objects.Uid
 import org.identityconnectors.framework.common.objects.filter.Filter
 
-import static groovyx.net.http.Method.GET
-
 def operation = operation as OperationType
 def configuration = configuration as ScriptedRESTConfiguration
-def httpClient = connection as HttpClient
-def connection = customizedConnection as RESTClient
+def connection = connection as HttpClient
 def filter = filter as Filter
 def log = log as Log
 def objectClass = objectClass as ObjectClass
@@ -80,7 +80,7 @@ if (filter != null) {
                     throw new IllegalArgumentException("Unknown field name: ${name}");
                 }
             },
-            convertValue : { Attribute value ->
+            convertValue: { Attribute value ->
                 if (AttributeUtil.namesEqual(value.name, "members")) {
                     return value.value
                 } else {
@@ -88,59 +88,58 @@ if (filter != null) {
                 }
             }] as VisitorParameter).toString();
 }
+
+String path
 switch (objectClass) {
     case ObjectClass.ACCOUNT:
-        def searchResult = connection.request(GET) { req ->
-            uri.path = '/users'
-            uri.query = [
-                    _queryFilter: queryFilter
-            ]
-
-            response.success = { resp, json ->
-                json.result.each() { value ->
-                    resultHandler {
-                        uid value._id
-                        id value._id
-                        attribute 'telephoneNumber', value?.contactInformation?.telephoneNumber
-                        attribute 'emailAddress', value?.contactInformation?.emailAddress
-                        attribute 'familyName', value?.name?.familyName
-                        attribute 'givenName', value?.name?.givenName
-                        attribute 'displayName', value?.displayName
-                        attribute 'managerId', value?.manager?._id
-                        attribute 'managerDisplayName', value?.manager?.displayName                        
-                        attribute 'groups', value?.groups
-                        attribute 'created', value?.meta?.created
-                        attribute 'lastModified', value?.meta?.lastModified
-                    }
-                }
-                json
-            }
-        }
-
-        return new SearchResult(searchResult.pagedResultsCookie, searchResult.remainingPagedResults)
-
+        path = 'users'
+        break
     case ObjectClass.GROUP:
-
-        def searchResult = connection.request(GET) { req ->
-            uri.path = '/groups'
-            uri.query = [
-                    _queryFilter: queryFilter
-            ]
-
-            response.success = { resp, json ->
-                json.result.each() { value ->
-                    resultHandler {
-                        uid value._id
-                        id value._id
-                        attribute 'members', value?.members
-                        attribute 'displayName', value?.displayName
-                        attribute 'created', value?.meta?.created
-                        attribute 'lastModified', value?.meta?.lastModified
-                    }
-                }
-                json
-            }
-        }
-
-        return new SearchResult(searchResult.pagedResultsCookie, searchResult.remainingPagedResults)
+        path = 'groups'
+        break
+    default:
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
 }
+
+def uri = new URIBuilder(configuration.serviceAddress.resolve(path))
+        .addParameter('_queryFilter', queryFilter)
+        .build()
+
+def json = connection.execute(new HttpGet(uri), { HttpResponse response ->
+    if (response.statusLine.statusCode != 200) {
+        throw new ConnectorException(response.statusLine.toString())
+    }
+    return new JsonSlurper().parse(response.entity.content, 'UTF-8')
+} as ResponseHandler)
+
+json.result.each() { value ->
+    if (ObjectClass.ACCOUNT == objectClass) {
+        resultHandler {
+            uid value._id
+            id value._id
+            attribute 'telephoneNumber', value?.contactInformation?.telephoneNumber
+            attribute 'emailAddress', value?.contactInformation?.emailAddress
+            attribute 'familyName', value?.name?.familyName
+            attribute 'givenName', value?.name?.givenName
+            attribute 'displayName', value?.displayName
+            attribute 'managerId', value?.manager?._id
+            attribute 'managerDisplayName', value?.manager?.displayName
+            attribute 'groups', value?.groups
+            attribute 'created', value?.meta?.created
+            attribute 'lastModified', value?.meta?.lastModified
+        }
+    } else {
+        resultHandler {
+            uid value._id
+            id value._id
+            attribute 'members', value?.members
+            attribute 'displayName', value?.displayName
+            attribute 'created', value?.meta?.created
+            attribute 'lastModified', value?.meta?.lastModified
+        }
+    }
+}
+
+return new SearchResult(json.pagedResultsCookie as String,
+        json.remainingPagedResults != null ? json.remainingPagedResults as int : -1)

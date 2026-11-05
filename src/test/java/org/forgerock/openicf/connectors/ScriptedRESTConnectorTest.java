@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2026 Wren Security.
  */
 
 package org.forgerock.openicf.connectors;
@@ -51,25 +52,25 @@ public class ScriptedRESTConnectorTest extends RESTTestBase {
         return getFacade(ScriptedRESTConnector.class, TEST_NAME);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testURI() throws Exception {
         URI host = new URI("http://localhost:8080/openidm");
         host.getAuthority();
     }
 
-    @Test(enabled = false)
+    @Test
     public void validate() throws Exception {
         final ConnectorFacade facade = getFacade();
         facade.validate();
     }
 
-    @Test(enabled = false)
+    @Test
     public void test() throws Exception {
         final ConnectorFacade facade = getFacade();
         facade.test();
     }
 
-    @Test(enabled = false)
+    @Test
     public void testCreate() throws Exception {
         final ConnectorFacade facade = getFacade();
         Set<Attribute> createAttributes = new HashSet<Attribute>();

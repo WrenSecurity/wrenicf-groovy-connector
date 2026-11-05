@@ -20,11 +20,14 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2026 Wren Security.
  */
 
 package org.forgerock.openicf.connectors.scriptedrest
 
 import org.apache.http.HttpHost
+import org.apache.http.HttpRequest
+import org.apache.http.HttpRequestInterceptor
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.CredentialsProvider
@@ -38,6 +41,7 @@ import org.apache.http.impl.client.BasicCookieStore
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.apache.http.protocol.HttpContext
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration.AuthMethod
 import org.identityconnectors.common.security.GuardedString
 
@@ -93,6 +97,13 @@ customize {
                 // Generate BASIC scheme object and add it to the local auth cache
                 authCache.put(httpHost, new BasicScheme());
                 c.propertyBag.put(HttpClientContext.AUTH_CACHE, authCache)
+                // Add the auth cache to each request, so the credentials are sent without waiting for a 401.
+                // A request with its own context and auth cache keeps its own.
+                builder.addInterceptorFirst({ HttpRequest request, HttpContext context ->
+                    if (context.getAttribute(HttpClientContext.AUTH_CACHE) == null) {
+                        context.setAttribute(HttpClientContext.AUTH_CACHE, authCache)
+                    }
+                } as HttpRequestInterceptor)
 
             case AuthMethod.BASIC:
                 // It's part of the http client spec to request the resource anonymously
@@ -114,7 +125,10 @@ customize {
                 throw new IllegalArgumentException();
         }
 
-        c.propertyBag.put(HttpClientContext.COOKIE_STORE, new BasicCookieStore());
+        // Use the cookie store for all requests, it is also available to scripts in the property bag
+        def cookieStore = new BasicCookieStore()
+        builder.setDefaultCookieStore(cookieStore)
+        c.propertyBag.put(HttpClientContext.COOKIE_STORE, cookieStore);
 
     }
 

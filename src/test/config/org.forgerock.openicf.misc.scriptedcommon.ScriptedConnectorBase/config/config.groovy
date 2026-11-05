@@ -127,6 +127,7 @@ environments {
         configuration {
             scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/rest/").file, "UTF-8")]
             serviceAddress = new URI("http://localhost:${httpPort}/test/rest/")
+            defaultAuthMethod = "BASIC_PREEMPTIVE"
             username = "admin"
             password = new GuardedString("Passw0rd".toCharArray())
             customizerScriptFileName = "CustomizerScript.groovy"
@@ -160,27 +161,6 @@ environments {
             url = "jdbc:mysql://localhost:3306/HRDB"
             username = "__configureme__"
             password = "__configureme__"
-        }
-    }
-    ARM {
-        configuration {
-            scriptRoots = [URLDecoder.decode(ScriptedConnectorBase.class.getResource("/arm/").file, "UTF-8")]
-            customizerScriptFileName = "CustomizerScript.groovy"
-            authenticateScriptFileName = null
-            createScriptFileName = null
-            deleteScriptFileName = null
-            resolveUsernameScriptFileName = null
-            schemaScriptFileName = "SchemaScript.groovy"
-            scriptOnResourceScriptFileName = null
-            searchScriptFileName = "SearchScript.groovy"
-            syncScriptFileName = null
-            testScriptFileName = "TestScript.groovy"
-            updateScriptFileName = null
-
-            serviceAddress = new URI("http://localhost:8080")
-            defaultAuthMethod = "BASIC_PREEMPTIVE"
-            username = "__configureme__"
-            password = new GuardedString("secret".toCharArray())
         }
     }
 
