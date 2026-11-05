@@ -20,30 +20,30 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2026 Wren Security.
  */
 
-@Grapes([
-        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
-        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
-)
 import groovy.json.JsonBuilder
-import groovyx.net.http.RESTClient
+import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
+import org.apache.http.client.ResponseHandler
+import org.apache.http.client.methods.HttpPut
+import org.apache.http.entity.ContentType
+import org.apache.http.entity.StringEntity
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
+import org.identityconnectors.framework.common.exceptions.AlreadyExistsException
+import org.identityconnectors.framework.common.exceptions.ConnectorException
 import org.identityconnectors.framework.common.objects.Attribute
 import org.identityconnectors.framework.common.objects.AttributesAccessor
 import org.identityconnectors.framework.common.objects.ObjectClass
 import org.identityconnectors.framework.common.objects.OperationOptions
 
-import static groovyx.net.http.ContentType.JSON
-
 def operation = operation as OperationType
 def createAttributes = new AttributesAccessor(attributes as Set<Attribute>)
 def configuration = configuration as ScriptedRESTConfiguration
-def httpClient = connection as HttpClient
-def connection = customizedConnection as RESTClient
+def connection = connection as HttpClient
 def name = id as String
 def log = log as Log
 def objectClass = objectClass as ObjectClass
@@ -51,9 +51,11 @@ def options = options as OperationOptions
 
 log.info("Entering " + operation + " Script");
 
+String path
+def builder = new JsonBuilder()
 switch (objectClass) {
     case ObjectClass.ACCOUNT:
-        def builder = new JsonBuilder()
+        path = 'users/' + URLEncoder.encode(name, 'UTF-8')
         builder {
             _id name
             contactInformation {
@@ -70,25 +72,34 @@ switch (objectClass) {
         if (createAttributes.hasAttribute("password")) {
             builder.content["password"] = createAttributes.findString("password")
         }
-        
-        connection.put(
-                path: '/users/' + name,
-                headers: ['If-None-Match': '*'],
-                contentType: JSON,
-                requestContentType: JSON,
-                body: builder.toString());
         break
 
     case ObjectClass.GROUP:
-        def builder = new JsonBuilder()
+        path = 'groups/' + URLEncoder.encode(name, 'UTF-8')
         builder {
             _id name
             members(createAttributes.hasAttribute("members") ? createAttributes.findList("members") : [])
         }
-        connection.put(
-                path: '/groups/' + name,
-                headers: ['If-None-Match': '*'],
-                body: builder.toString());
+        break
 
+    default:
+        throw new UnsupportedOperationException(operation.name() + " operation of type:" +
+                objectClass.objectClassValue + " is not supported.")
 }
+
+// PUT with If-None-Match: * creates the resource, or fails when it already exists
+def request = new HttpPut(configuration.serviceAddress.resolve(path))
+request.setHeader('If-None-Match', '*')
+request.setEntity(new StringEntity(builder.toString(), ContentType.APPLICATION_JSON))
+
+connection.execute(request, { HttpResponse response ->
+    def status = response.statusLine.statusCode
+    if (status == 412) {
+        throw new AlreadyExistsException("Object ${name} already exists")
+    }
+    if (status >= 300) {
+        throw new ConnectorException(response.statusLine.toString())
+    }
+} as ResponseHandler)
+
 return name

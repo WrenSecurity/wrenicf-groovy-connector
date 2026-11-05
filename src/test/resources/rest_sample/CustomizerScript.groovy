@@ -20,19 +20,16 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2026 Wren Security.
  */
 
-@Grapes([
-        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1')]
-)
-import groovyx.net.http.RESTClient
-import groovyx.net.http.StringHashMap
+import org.apache.http.HttpHeaders
 import org.apache.http.HttpHost
+import org.apache.http.HttpRequest
+import org.apache.http.HttpRequestInterceptor
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
-import org.apache.http.client.ClientProtocolException
 import org.apache.http.client.CredentialsProvider
-import org.apache.http.client.HttpClient
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.conn.routing.HttpRoute
@@ -42,11 +39,10 @@ import org.apache.http.impl.client.BasicCookieStore
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.apache.http.message.BasicHeader
+import org.apache.http.protocol.HttpContext
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
 import org.identityconnectors.common.security.GuardedString
-
-// must import groovyx.net.http.HTTPBuilder.RequestConfigDelegate
-import groovyx.net.http.HTTPBuilder.RequestConfigDelegate
 
 /**
  * A NAME does ...
@@ -98,7 +94,13 @@ customize {
                 def authCache = new BasicAuthCache();
                 // Generate BASIC scheme object and add it to the local auth cache
                 authCache.put(httpHost, new BasicScheme());
-                c.propertyBag.put(HttpClientContext.AUTH_CACHE, authCache)
+                // Add the auth cache to each request, so the credentials are sent without waiting for a 401.
+                // A request with its own context and auth cache (e.g. AuthenticateScript) keeps its own.
+                builder.addInterceptorFirst({ HttpRequest request, HttpContext context ->
+                    if (context.getAttribute(HttpClientContext.AUTH_CACHE) == null) {
+                        context.setAttribute(HttpClientContext.AUTH_CACHE, authCache)
+                    }
+                } as HttpRequestInterceptor)
 
             case ScriptedRESTConfiguration.AuthMethod.BASIC:
                 // It's part of the http client spec to request the resource anonymously
@@ -120,71 +122,21 @@ customize {
                 throw new IllegalArgumentException();
         }
 
-        c.propertyBag.put(HttpClientContext.COOKIE_STORE, new BasicCookieStore());
-    }
+        builder.setDefaultCookieStore(new BasicCookieStore());
 
-    /**
-     * This Closure can customize the httpClient and the returning object is injected into the Script Binding.
-     */
-    decorate { HttpClient httpClient ->
-
-        //SETUP: groovyx.net.http
-
-        def c = delegate as ScriptedRESTConfiguration
-
-        def authCache = c.propertyBag.get(HttpClientContext.AUTH_CACHE)
-
-        def cookieStore = c.propertyBag.get(HttpClientContext.COOKIE_STORE)
-
-        RESTClient restClient = new InnerRESTClient(c.serviceAddress, c.defaultContentType, authCache, cookieStore)
-
-        Map<Object, Object> defaultRequestHeaders = new StringHashMap<Object>();
-        if (null != c.defaultRequestHeaders) {
-            c.defaultRequestHeaders.each {
-                if (null != it) {                
-                    def kv = it.split('=')
-                    assert kv.size() == 2
-                    defaultRequestHeaders.put(kv[0], kv[1])
-                }
+        // Headers sent with every request: Accept with the default content type and the configured headers
+        def defaultHeaders = []
+        if (c.defaultContentType != null) {
+            defaultHeaders << new BasicHeader(HttpHeaders.ACCEPT, c.defaultContentType)
+        }
+        c.defaultRequestHeaders?.each {
+            if (null != it) {
+                def kv = it.split('=', 2)
+                assert kv.size() == 2
+                defaultHeaders << new BasicHeader(kv[0], kv[1])
             }
         }
-
-        restClient.setClient(httpClient);
-        restClient.setHeaders(defaultRequestHeaders)
-
-        // Return with the decorated instance
-        return restClient
+        builder.setDefaultHeaders(defaultHeaders)
     }
 
-}
-
-RequestConfigDelegate blank = null;
-
-class InnerRESTClient extends RESTClient {
-
-    def authCache = null;
-    def cookieStore = null;
-
-    InnerRESTClient(Object defaultURI, Object defaultContentType, authCache, cookieStore) throws URISyntaxException {
-        super(defaultURI, defaultContentType)
-        this.authCache = authCache
-        this.cookieStore = cookieStore
-    }
-
-    @Override
-    protected Object doRequest(
-            final RequestConfigDelegate delegate) throws ClientProtocolException, IOException {
-
-        // Add AuthCache to the execution context
-        if (null != authCache) {
-            //do Preemptive Auth
-            delegate.getContext().setAttribute(HttpClientContext.AUTH_CACHE, authCache);
-        }
-        // Add AuthCache to the execution context
-        if (null != cookieStore) {
-            //do Preemptive Auth
-            delegate.getContext().setAttribute(HttpClientContext.COOKIE_STORE, cookieStore);
-        }
-        return super.doRequest(delegate)
-    }
 }

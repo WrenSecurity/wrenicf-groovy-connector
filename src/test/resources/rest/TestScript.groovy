@@ -20,55 +20,35 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyright 2026 Wren Security.
  */
 
-@Grapes([
-        @Grab(group = 'org.codehaus.groovy.modules.http-builder', module = 'http-builder', version = '0.7.1'),
-        @Grab(group = 'commons-io', module = 'commons-io', version = '2.4')]
-)
-import groovyx.net.http.RESTClient
+import groovy.json.JsonSlurper
+import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
+import org.apache.http.client.ResponseHandler
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.entity.ContentType
+import org.apache.http.entity.StringEntity
 import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration
 import org.forgerock.openicf.misc.scriptedcommon.OperationType
 import org.identityconnectors.common.logging.Log
 
-import static groovyx.net.http.ContentType.JSON
-import static groovyx.net.http.Method.POST
-
 def operation = operation as OperationType
 def configuration = configuration as ScriptedRESTConfiguration
-def httpClient = connection as HttpClient
-def connection = customizedConnection as RESTClient
+def connection = connection as HttpClient
 def log = log as Log
 
-connection.handler.failure = { resp ->
-    log.ok "Unexpected failure: ${resp.statusLine}"
-}
+def request = new HttpPost(configuration.serviceAddress.resolve('users?_action=clear'))
+request.setEntity(new StringEntity('null', ContentType.APPLICATION_JSON))
 
-def cleared = connection.post(
-        path: "/rest/users",
-        contentType: JSON,
-        requestContentType: JSON,
-        query: [
-                _action: "clear"
-        ],
-        body: 'null'
-)
-
-
-cleared = connection.request(POST, JSON) { req ->
-    uri.path = '/rest/users'
-    uri.query = [_action: 'clear']
-    send JSON, 'null'
-
-    //requestContentType = JSON
-    //body = 'null'
-
-    response.success = { resp, json ->
-        assert json.size() == 1
-        println "Action response: "
-        json.responseData.each() { key, value ->
-            log.debug "  ${key} : ${value}"
+connection.execute(request, { HttpResponse response ->
+    if (response.statusLine.statusCode == 200) {
+        log.ok "Action response: "
+        new JsonSlurper().parse(response.entity.content, 'UTF-8').each() { key, value ->
+            log.ok "  ${key} : ${value}"
         }
+    } else {
+        log.ok "Unexpected failure: ${response.statusLine}"
     }
-}
+} as ResponseHandler)
